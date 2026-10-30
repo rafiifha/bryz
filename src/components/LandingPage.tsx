@@ -194,23 +194,22 @@ export default function LandingPage({
             {config.logoImageUrl ? (
               <img
                 src={config.logoImageUrl}
-                alt="Bryz Academic"
+                alt="Bryz Academic Support"
                 className="navbar-logo-img"
+                style={{ maxHeight: '36px', width: 'auto', objectFit: 'contain' }}
               />
             ) : (
-              <>
-                <div className="navbar-logo-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                  </svg>
-                </div>
-                <div className="navbar-logo-text">
-                  <span>Bryz</span>
-                  <span className="navbar-logo-badge">Academic</span>
-                </div>
-              </>
+              <div className="navbar-logo-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                </svg>
+              </div>
             )}
+            <div className="navbar-logo-text">
+              <span>Bryz</span>
+              <span className="navbar-logo-badge">Academic Support</span>
+            </div>
           </a>
 
           {/* Desktop Navigation Links */}
@@ -713,24 +712,22 @@ export default function LandingPage({
                 {config.logoImageUrl ? (
                   <img
                     src={config.logoImageUrl}
-                    alt="Bryz Academic"
+                    alt="Bryz Academic Support"
                     className="navbar-logo-img"
-                    style={{ maxHeight: '36px' }}
+                    style={{ maxHeight: '36px', width: 'auto', objectFit: 'contain' }}
                   />
                 ) : (
-                  <>
-                    <div className="navbar-logo-icon">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                      </svg>
-                    </div>
-                    <div className="navbar-logo-text">
-                      <span>Bryz</span>
-                      <span className="navbar-logo-badge">Academic</span>
-                    </div>
-                  </>
+                  <div className="navbar-logo-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                    </svg>
+                  </div>
                 )}
+                <div className="navbar-logo-text">
+                  <span>Bryz</span>
+                  <span className="navbar-logo-badge">Academic Support</span>
+                </div>
               </a>
               <p className="footer-brand-desc">
                 Solusi pendampingan dan asistensi tugas akademik tepercaya untuk mahasiswa di seluruh Indonesia. Mengutamakan privasi 100%, orisinalitas riset, dan garansi revisi sampai ACC.
