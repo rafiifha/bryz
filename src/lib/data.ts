@@ -80,36 +80,7 @@ export const defaultServices: Service[] = [
   },
 ];
 
-export const defaultTestimonials: Testimonial[] = [
-  {
-    id: '1',
-    name: 'Skripsi Bab 1-5 & Olah Data (ACC Sidang)',
-    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-    rating: 5,
-    order: 1,
-  },
-  {
-    id: '2',
-    name: 'Proposal Skripsi & Metodologi (Lolos Seminar)',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-    rating: 5,
-    order: 2,
-  },
-  {
-    id: '3',
-    name: 'Artikel Jurnal SINTA 2 (Terbit & Bebas Revisi)',
-    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
-    rating: 5,
-    order: 3,
-  },
-  {
-    id: '4',
-    name: 'Tugas Teknik: Coding & Analisis Struktur (Nilai A)',
-    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80',
-    rating: 5,
-    order: 4,
-  },
-];
+export const defaultTestimonials: Testimonial[] = [];
 
 export const defaultConfig: SiteConfig = {
   whatsappNumber: '6281234567890',
