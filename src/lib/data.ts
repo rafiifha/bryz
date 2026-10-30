@@ -1,12 +1,17 @@
 import { Service, Testimonial, SiteConfig } from './types';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { put, list } from '@vercel/blob';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const SERVICES_FILE = path.join(DATA_DIR, 'services.json');
-const TESTIMONIALS_FILE = path.join(DATA_DIR, 'testimonials.json');
-const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+// Deteksi environment serverless Vercel
+const isServerless = process.env.VERCEL === '1';
+const DATA_DIR = isServerless
+  ? path.join(os.tmpdir(), 'bryz-academic-data')
+  : path.join(process.cwd(), 'data');
+
+// In-memory cache fallback saat proses serverless berjalan
+const globalMemoryCache: Record<string, any> = {};
 
 // Default initial data
 export const defaultServices: Service[] = [
@@ -118,8 +123,12 @@ export const defaultConfig: SiteConfig = {
 };
 
 function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch {
+    // Abaikan jika lingkungan serverless tidak mengizinkan write
   }
 }
 
@@ -133,30 +142,41 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
         const sorted = blobs.sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
         const res = await fetch(sorted[0].url, { cache: 'no-store' });
         if (res.ok) {
-          return (await res.json()) as T;
+          const val = (await res.json()) as T;
+          globalMemoryCache[key] = val;
+          return val;
         }
       }
     } catch (err) {
-      console.warn(`[Vercel Blob] Read error for ${key}, falling back:`, err);
+      console.warn(`[Vercel Blob] Read warning for ${key}:`, err);
     }
   }
 
-  // Local fallback
+  // 2. Memory cache check
+  if (globalMemoryCache[key]) {
+    return globalMemoryCache[key] as T;
+  }
+
+  // 3. Local fallback
   try {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, `${key}.json`);
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(content);
+      const val = JSON.parse(content);
+      globalMemoryCache[key] = val;
+      return val;
     }
-  } catch (err) {
-    console.warn(`[Local FS] Read error for ${key}:`, err);
+  } catch {
+    // silent catch
   }
 
   return defaultValue;
 }
 
 async function writeBlobJson<T>(key: string, data: T): Promise<void> {
+  // Simpan ke in-memory cache
+  globalMemoryCache[key] = data;
   const jsonStr = JSON.stringify(data, null, 2);
 
   // 1. Try Vercel Blob if token is set
@@ -169,17 +189,17 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
         token,
       });
     } catch (err) {
-      console.warn(`[Vercel Blob] Write error for ${key}:`, err);
+      console.warn(`[Vercel Blob] Write warning for ${key}:`, err);
     }
   }
 
-  // 2. Always maintain local copy if possible
+  // 2. Maintain local/tmp copy if possible
   try {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, `${key}.json`);
     fs.writeFileSync(filePath, jsonStr);
-  } catch (err) {
-    console.warn(`[Local FS] Write error for ${key}:`, err);
+  } catch {
+    // silent catch on read-only environments
   }
 }
 

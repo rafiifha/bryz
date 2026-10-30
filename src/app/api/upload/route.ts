@@ -39,19 +39,38 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Local filesystem storage fallback
-    ensureUploadDir();
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // 2. Serverless Vercel fallback (Read-only filesystem)
+    if (process.env.VERCEL === '1') {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const mimeType = file.type || 'image/png';
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+      return NextResponse.json({ url: dataUrl });
+    }
 
-    const ext = path.extname(file.name) || '.png';
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
+    // 3. Local filesystem storage fallback (development environment)
+    try {
+      ensureUploadDir();
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-    fs.writeFileSync(filepath, buffer);
+      const ext = path.extname(file.name) || '.png';
+      const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+      const filepath = path.join(UPLOAD_DIR, filename);
 
-    const url = `/uploads/${filename}`;
-    return NextResponse.json({ url });
+      fs.writeFileSync(filepath, buffer);
+
+      const url = `/uploads/${filename}`;
+      return NextResponse.json({ url });
+    } catch {
+      // Jika lokal FS pun tidak bisa diakses, gunakan Base64
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const mimeType = file.type || 'image/png';
+      const base64 = buffer.toString('base64');
+      return NextResponse.json({ url: `data:${mimeType};base64,${base64}` });
+    }
   } catch (error: any) {
     console.error('Upload handler error:', error);
     return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
