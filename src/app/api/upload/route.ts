@@ -23,19 +23,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // 1. If Vercel Blob token is configured, upload directly to Vercel Blob
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (token) {
+    // 1. If Vercel Blob is configured (token or OIDC BLOB_STORE_ID), upload directly to Vercel Blob
+    const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+    if (hasBlob) {
       try {
         const ext = path.extname(file.name) || '.png';
-        const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}${ext}`;
         const blob = await put(`bryz-support/${cleanName}`, file, {
           access: 'public',
-          token,
         });
         return NextResponse.json({ url: blob.url });
       } catch (err) {
-        console.warn('Vercel Blob upload failed, falling back to local file storage:', err);
+        console.warn('Vercel Blob upload failed, falling back to local/base64 storage:', err);
       }
     }
 

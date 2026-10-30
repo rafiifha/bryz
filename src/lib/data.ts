@@ -105,10 +105,10 @@ function ensureDataDir() {
 
 // Helpers for reading/writing with Vercel Blob support
 async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (token) {
+  const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  if (hasBlob) {
     try {
-      const { blobs } = await list({ prefix: `db/${key}`, token });
+      const { blobs } = await list({ prefix: `db/${key}` });
       if (blobs.length > 0) {
         const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
         const res = await fetch(sorted[0].url, { cache: 'no-store' });
@@ -150,23 +150,22 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
   globalMemoryCache[key] = data;
   const jsonStr = JSON.stringify(data, null, 2);
 
-  // 1. Try Vercel Blob if token is set
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (token) {
+  // 1. Try Vercel Blob (supports token or OIDC BLOB_STORE_ID)
+  const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  if (hasBlob) {
     try {
       // Simpan file baru dengan random suffix agar tidak pernah throw BlobAlreadyExistsError
       const newBlob = await put(`db/${key}.json`, jsonStr, {
         access: 'public',
         addRandomSuffix: true,
-        token,
       });
 
       // Hapus blob versi lama agar storage selalu bersih dan rapi
       try {
-        const { blobs } = await list({ prefix: `db/${key}`, token });
+        const { blobs } = await list({ prefix: `db/${key}` });
         const oldBlobs = blobs.filter((b) => b.url !== newBlob.url);
         if (oldBlobs.length > 0) {
-          await del(oldBlobs.map((b) => b.url), { token });
+          await del(oldBlobs.map((b) => b.url));
         }
       } catch {}
 
