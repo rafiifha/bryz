@@ -10,7 +10,15 @@ interface LandingPageProps {
   config: SiteConfig;
 }
 
-export default function LandingPage({ services, testimonials, config }: LandingPageProps) {
+export default function LandingPage({
+  services: initialServices,
+  testimonials: initialTestimonials,
+  config: initialConfig,
+}: LandingPageProps) {
+  const [services, setServices] = useState<Service[]>(initialServices);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const [config, setConfig] = useState<SiteConfig>(initialConfig);
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -22,6 +30,32 @@ export default function LandingPage({ services, testimonials, config }: LandingP
     const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Sinkronisasi data real-time dengan Admin
+  useEffect(() => {
+    // 1. Cek local storage untuk update instan
+    try {
+      const localConf = localStorage.getItem('bryz_site_config');
+      if (localConf) setConfig(JSON.parse(localConf));
+      const localTest = localStorage.getItem('bryz_testimonials');
+      if (localTest) setTestimonials(JSON.parse(localTest));
+      const localServ = localStorage.getItem('bryz_services');
+      if (localServ) setServices(JSON.parse(localServ));
+    } catch {}
+
+    // 2. Fetch live data dari API backend
+    Promise.all([
+      fetch('/api/services', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/testimonials', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/config', { cache: 'no-store' }).then((r) => r.json()),
+    ])
+      .then(([s, t, c]) => {
+        if (Array.isArray(s) && s.length > 0) setServices(s);
+        if (Array.isArray(t)) setTestimonials(t);
+        if (c && typeof c === 'object' && c.whatsappNumber) setConfig(c);
+      })
+      .catch(() => {});
   }, []);
 
   const getWaLink = (serviceName?: string) => {

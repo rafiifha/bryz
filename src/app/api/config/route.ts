@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getConfig, saveConfig } from '@/lib/data';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 
@@ -16,6 +17,7 @@ export async function PUT(request: Request) {
     const updatedConfig = { ...currentConfig, ...body };
     await saveConfig(updatedConfig);
 
+    revalidatePath('/');
     return NextResponse.json(updatedConfig);
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

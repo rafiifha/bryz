@@ -58,13 +58,23 @@ export default function AdminDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const [servRes, testRes, confRes] = await Promise.all([
-        fetch('/api/services'),
-        fetch('/api/testimonials'),
-        fetch('/api/config'),
+        fetch('/api/services', { cache: 'no-store' }),
+        fetch('/api/testimonials', { cache: 'no-store' }),
+        fetch('/api/config', { cache: 'no-store' }),
       ]);
-      setServices(await servRes.json());
-      setTestimonials(await testRes.json());
-      setConfig(await confRes.json());
+      const [servData, testData, confData] = await Promise.all([
+        servRes.json(),
+        testRes.json(),
+        confRes.json(),
+      ]);
+      setServices(servData);
+      setTestimonials(testData);
+      setConfig(confData);
+      try {
+        localStorage.setItem('bryz_services', JSON.stringify(servData));
+        localStorage.setItem('bryz_testimonials', JSON.stringify(testData));
+        localStorage.setItem('bryz_site_config', JSON.stringify(confData));
+      } catch {}
     } catch {
       showToast('Gagal memuat data dari database', 'error');
     } finally {
@@ -179,7 +189,11 @@ export default function AdminDashboard() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Gagal menghapus layanan dari server');
       }
-      setServices((prev) => prev.filter((s) => s.id !== id));
+      setServices((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        try { localStorage.setItem('bryz_services', JSON.stringify(next)); } catch {}
+        return next;
+      });
       showToast(`Layanan "${name}" berhasil dihapus`, 'success');
       fetchData();
     } catch (err: any) {
@@ -237,7 +251,11 @@ export default function AdminDashboard() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Gagal menghapus testimoni dari server');
       }
-      setTestimonials((prev) => prev.filter((t) => t.id !== id));
+      setTestimonials((prev) => {
+        const next = prev.filter((t) => t.id !== id);
+        try { localStorage.setItem('bryz_testimonials', JSON.stringify(next)); } catch {}
+        return next;
+      });
       showToast('Testimoni berhasil dihapus', 'success');
       fetchData();
     } catch (err: any) {
@@ -258,19 +276,26 @@ export default function AdminDashboard() {
         const uploadedLogoUrl = await uploadFile(logoFile);
         finalConfig.logoImageUrl = uploadedLogoUrl;
       }
-      await fetch('/api/config', {
+      const res = await fetch('/api/config', {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify(finalConfig),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal menyimpan pengaturan ke server');
+      }
       setConfig(finalConfig);
+      try {
+        localStorage.setItem('bryz_site_config', JSON.stringify(finalConfig));
+      } catch {}
       setQrisFile(null);
       setQrisPreview(null);
       setLogoFile(null);
       setLogoPreview(null);
       showToast('Pengaturan website berhasil disimpan', 'success');
-    } catch {
-      showToast('Gagal menyimpan pengaturan', 'error');
+    } catch (err: any) {
+      showToast(err.message || 'Gagal menyimpan pengaturan', 'error');
     } finally {
       setSaving(false);
     }

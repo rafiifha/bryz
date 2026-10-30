@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getTestimonials, addTestimonial, deleteTestimonial } from '@/lib/data';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
       rating: rating || 5,
     });
 
+    revalidatePath('/');
     return NextResponse.json(testimonial, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
@@ -46,6 +48,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Testimoni tidak ditemukan' }, { status: 404 });
     }
 
+    revalidatePath('/');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
