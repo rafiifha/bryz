@@ -171,14 +171,19 @@ export default function AdminDashboard() {
   const deleteServiceHandler = async (id: string, name: string) => {
     if (!confirm(`Hapus layanan "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
     try {
-      await fetch(`/api/services?id=${id}`, {
+      const res = await fetch(`/api/services?id=${id}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal menghapus layanan dari server');
+      }
+      setServices((prev) => prev.filter((s) => s.id !== id));
       showToast(`Layanan "${name}" berhasil dihapus`, 'success');
       fetchData();
-    } catch {
-      showToast('Gagal menghapus layanan', 'error');
+    } catch (err: any) {
+      showToast(err.message || 'Gagal menghapus layanan', 'error');
     }
   };
 
@@ -198,7 +203,7 @@ export default function AdminDashboard() {
     setSaving(true);
     try {
       const imageUrl = await uploadFile(testimonialImage);
-      await fetch('/api/testimonials', {
+      const res = await fetch('/api/testimonials', {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({
@@ -207,11 +212,15 @@ export default function AdminDashboard() {
           rating: testimonialRating,
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal menyimpan testimoni ke database');
+      }
       showToast('Screenshot testimoni berhasil ditambahkan', 'success');
       setShowTestimonialModal(false);
       fetchData();
-    } catch {
-      showToast('Gagal mengunggah testimoni', 'error');
+    } catch (err: any) {
+      showToast(err.message || 'Gagal mengunggah testimoni', 'error');
     } finally {
       setSaving(false);
     }
@@ -220,14 +229,19 @@ export default function AdminDashboard() {
   const deleteTestimonialHandler = async (id: string) => {
     if (!confirm('Hapus screenshot testimoni ini?')) return;
     try {
-      await fetch(`/api/testimonials?id=${id}`, {
+      const res = await fetch(`/api/testimonials?id=${id}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Gagal menghapus testimoni dari server');
+      }
+      setTestimonials((prev) => prev.filter((t) => t.id !== id));
       showToast('Testimoni berhasil dihapus', 'success');
       fetchData();
-    } catch {
-      showToast('Gagal menghapus testimoni', 'error');
+    } catch (err: any) {
+      showToast(err.message || 'Gagal menghapus testimoni', 'error');
     }
   };
 
