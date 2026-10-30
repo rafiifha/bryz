@@ -16,6 +16,7 @@ export default function AdminDashboard() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [blobConnected, setBlobConnected] = useState<boolean | null>(null);
 
   // Modal states
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -57,24 +58,58 @@ export default function AdminDashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [servRes, testRes, confRes] = await Promise.all([
+      const [servRes, testRes, confRes, statusRes] = await Promise.all([
         fetch('/api/services', { cache: 'no-store' }),
         fetch('/api/testimonials', { cache: 'no-store' }),
         fetch('/api/config', { cache: 'no-store' }),
+        fetch('/api/status', { cache: 'no-store' }).catch(() => null),
       ]);
-      const [servData, testData, confData] = await Promise.all([
+      const [servData, testData, confData, statusData] = await Promise.all([
         servRes.json(),
         testRes.json(),
         confRes.json(),
+        statusRes ? statusRes.json().catch(() => null) : null,
       ]);
-      setServices(servData);
-      setTestimonials(testData);
-      setConfig(confData);
+
+      const isBlobActive = Boolean(statusData?.blobConnected);
+      setBlobConnected(isBlobActive);
+
+      // Cek apakah ada data lokal di browser
+      let localConf: SiteConfig | null = null;
+      let localServ: Service[] | null = null;
+      let localTest: Testimonial[] | null = null;
       try {
-        localStorage.setItem('bryz_services', JSON.stringify(servData));
-        localStorage.setItem('bryz_testimonials', JSON.stringify(testData));
-        localStorage.setItem('bryz_site_config', JSON.stringify(confData));
+        const lc = localStorage.getItem('bryz_site_config');
+        if (lc) localConf = JSON.parse(lc);
+        const ls = localStorage.getItem('bryz_services');
+        if (ls) localServ = JSON.parse(ls);
+        const lt = localStorage.getItem('bryz_testimonials');
+        if (lt) localTest = JSON.parse(lt);
       } catch {}
+
+      if (isBlobActive) {
+        // Blob aktif di Vercel: data server adalah single source of truth
+        setServices(servData);
+        setTestimonials(testData);
+        setConfig(confData);
+        try {
+          localStorage.setItem('bryz_services', JSON.stringify(servData));
+          localStorage.setItem('bryz_testimonials', JSON.stringify(testData));
+          localStorage.setItem('bryz_site_config', JSON.stringify(confData));
+        } catch {}
+      } else {
+        // Blob belum terhubung di Vercel: jaga agar editan user tidak hilang tertimpa default server
+        const mergedConf: SiteConfig = {
+          ...confData,
+          ...(localConf || {}),
+        };
+        const finalServices = (localServ && localServ.length > 0) ? localServ : servData;
+        const finalTestimonials = (localTest !== null) ? localTest : testData;
+
+        setServices(finalServices);
+        setTestimonials(finalTestimonials);
+        setConfig(mergedConf);
+      }
     } catch {
       showToast('Gagal memuat data dari database', 'error');
     } finally {
@@ -472,14 +507,85 @@ export default function AdminDashboard() {
               Penyimpanan Database
             </span>
             <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-              <span>Vercel Blob / Storage</span>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: blobConnected === true ? 'var(--success)' : blobConnected === false ? '#ea580c' : 'var(--text-muted)',
+                display: 'inline-block',
+              }} />
+              <span>
+                {blobConnected === true ? 'Vercel Blob (Aktif)' : blobConnected === false ? 'Penyimpanan Lokal' : 'Memeriksa...'}
+              </span>
             </div>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Dual mode (Cloud & Lokal)
+            <span style={{ fontSize: '0.78rem', color: blobConnected === true ? 'var(--success)' : 'var(--text-muted)' }}>
+              {blobConnected === true ? '✅ Cloud Sync Permanen' : '⚠️ Perlu Connect Blob'}
             </span>
           </div>
         </div>
+
+        {/* Banner Status Vercel Blob */}
+        {blobConnected === false && (
+          <div style={{
+            background: 'rgba(234, 88, 12, 0.08)',
+            border: '1px solid rgba(234, 88, 12, 0.3)',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ea580c', fontWeight: 700, fontSize: '0.95rem' }}>
+                <span>⚠️ Vercel Blob Belum Terkoneksi ke Project Anda</span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchData}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #ea580c',
+                  color: '#ea580c',
+                  padding: '4px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Cek Ulang Koneksi
+              </button>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+              Data Anda saat ini diamankan di memori browser ini. Agar perubahan tersimpan <strong>permanen di Cloud untuk SEMUA pengunjung di seluruh dunia</strong>:
+            </p>
+            <ol style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', margin: 0, paddingLeft: '20px', lineHeight: 1.6 }}>
+              <li>Buka <strong>Vercel Dashboard</strong> → Pilih project <strong>bryz</strong>.</li>
+              <li>Masuk ke tab <strong>Storage</strong> → klik Blob store yang sudah dibuat.</li>
+              <li>Klik <strong>Connect Project</strong> dan pilih project <em>bryz</em>.</li>
+              <li>Masuk ke tab <strong>Deployments</strong> → Klik titik tiga (...) di deployment teratas → Pilih <strong>Redeploy</strong>.</li>
+            </ol>
+          </div>
+        )}
+
+        {blobConnected === true && (
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.08)',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: '#16a34a',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+          }}>
+            <span>✅ Vercel Blob Terhubung Permanen. Semua perubahan otomatis tersimpan di Cloud Database.</span>
+          </div>
+        )}
 
         {/* ===================== TAB 1: SERVICES ===================== */}
         {activeTab === 'services' && (

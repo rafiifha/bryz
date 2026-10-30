@@ -34,26 +34,58 @@ export default function LandingPage({
 
   // Sinkronisasi data real-time dengan Admin
   useEffect(() => {
+    let hasLocalConfig = false;
+    let hasLocalTestimonials = false;
+    let hasLocalServices = false;
+
     // 1. Cek local storage untuk update instan
     try {
       const localConf = localStorage.getItem('bryz_site_config');
-      if (localConf) setConfig(JSON.parse(localConf));
+      if (localConf) {
+        setConfig(JSON.parse(localConf));
+        hasLocalConfig = true;
+      }
       const localTest = localStorage.getItem('bryz_testimonials');
-      if (localTest) setTestimonials(JSON.parse(localTest));
+      if (localTest) {
+        setTestimonials(JSON.parse(localTest));
+        hasLocalTestimonials = true;
+      }
       const localServ = localStorage.getItem('bryz_services');
-      if (localServ) setServices(JSON.parse(localServ));
+      if (localServ) {
+        setServices(JSON.parse(localServ));
+        hasLocalServices = true;
+      }
     } catch {}
 
-    // 2. Fetch live data dari API backend
+    // 2. Fetch live data dari API backend & status blob
     Promise.all([
-      fetch('/api/services', { cache: 'no-store' }).then((r) => r.json()),
-      fetch('/api/testimonials', { cache: 'no-store' }).then((r) => r.json()),
-      fetch('/api/config', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/services', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+      fetch('/api/testimonials', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+      fetch('/api/config', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+      fetch('/api/status', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
     ])
-      .then(([s, t, c]) => {
-        if (Array.isArray(s) && s.length > 0) setServices(s);
-        if (Array.isArray(t)) setTestimonials(t);
-        if (c && typeof c === 'object' && c.whatsappNumber) setConfig(c);
+      .then(([s, t, c, st]) => {
+        const isBlobActive = Boolean(st?.blobConnected);
+
+        if (Array.isArray(s) && (isBlobActive || !hasLocalServices)) {
+          setServices(s);
+        }
+        if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials)) {
+          setTestimonials(t);
+        }
+        if (c && typeof c === 'object') {
+          if (isBlobActive) {
+            setConfig(c);
+          } else {
+            setConfig((prev) => ({
+              ...c,
+              ...prev,
+              logoImageUrl: prev.logoImageUrl || c.logoImageUrl,
+              qrisImageUrl: prev.qrisImageUrl || c.qrisImageUrl,
+              whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : c.whatsappNumber,
+            }));
+          }
+        }
       })
       .catch(() => {});
   }, []);

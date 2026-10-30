@@ -2,7 +2,7 @@ import { Service, Testimonial, SiteConfig } from './types';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { put, list } from '@vercel/blob';
+import { put, list, del } from '@vercel/blob';
 
 // Deteksi environment serverless Vercel / Cloud
 const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION || process.env.NODE_ENV === 'production';
@@ -108,9 +108,9 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (token) {
     try {
-      const { blobs } = await list({ prefix: `db/${key}.json`, token });
+      const { blobs } = await list({ prefix: `db/${key}`, token });
       if (blobs.length > 0) {
-        const sorted = blobs.sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
+        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
         const res = await fetch(sorted[0].url, { cache: 'no-store' });
         if (res.ok) {
           const val = (await res.json()) as T;
@@ -124,7 +124,7 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   }
 
   // 2. Memory cache check
-  if (globalMemoryCache[key]) {
+  if (globalMemoryCache[key] !== undefined) {
     return globalMemoryCache[key] as T;
   }
 
@@ -154,12 +154,23 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (token) {
     try {
-      await put(`db/${key}.json`, jsonStr, {
+      // Simpan file baru dengan random suffix agar tidak pernah throw BlobAlreadyExistsError
+      const newBlob = await put(`db/${key}.json`, jsonStr, {
         access: 'public',
-        addRandomSuffix: false,
+        addRandomSuffix: true,
         token,
       });
-      return; // Berhasil disimpan ke Cloud Vercel Blob, tidak perlu menyentuh filesystem
+
+      // Hapus blob versi lama agar storage selalu bersih dan rapi
+      try {
+        const { blobs } = await list({ prefix: `db/${key}`, token });
+        const oldBlobs = blobs.filter((b) => b.url !== newBlob.url);
+        if (oldBlobs.length > 0) {
+          await del(oldBlobs.map((b) => b.url), { token });
+        }
+      } catch {}
+
+      return;
     } catch (err) {
       console.warn(`[Vercel Blob] Write warning for ${key}:`, err);
     }
