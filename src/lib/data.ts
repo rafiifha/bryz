@@ -4,8 +4,8 @@ import path from 'path';
 import os from 'os';
 import { put, list } from '@vercel/blob';
 
-// Deteksi environment serverless Vercel
-const isServerless = process.env.VERCEL === '1';
+// Deteksi environment serverless Vercel / Cloud
+const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION || process.env.NODE_ENV === 'production';
 const DATA_DIR = isServerless
   ? path.join(os.tmpdir(), 'bryz-academic-data')
   : path.join(process.cwd(), 'data');
@@ -188,6 +188,7 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
         addRandomSuffix: false,
         token,
       });
+      return; // Berhasil disimpan ke Cloud Vercel Blob, tidak perlu menyentuh filesystem
     } catch (err) {
       console.warn(`[Vercel Blob] Write warning for ${key}:`, err);
     }

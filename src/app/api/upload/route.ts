@@ -40,7 +40,8 @@ export async function POST(request: Request) {
     }
 
     // 2. Serverless Vercel fallback (Read-only filesystem)
-    if (process.env.VERCEL === '1') {
+    const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION || process.env.NODE_ENV === 'production';
+    if (isServerless) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const mimeType = file.type || 'image/png';
