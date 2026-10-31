@@ -207,8 +207,7 @@ export default function LandingPage({
               </div>
             )}
             <div className="navbar-logo-text">
-              <span>Bryz</span>
-              <span className="navbar-logo-badge">Academic Support</span>
+              <span>Bryz Academic Support</span>
             </div>
           </a>
 
@@ -725,8 +724,7 @@ export default function LandingPage({
                   </div>
                 )}
                 <div className="navbar-logo-text">
-                  <span>Bryz</span>
-                  <span className="navbar-logo-badge">Academic Support</span>
+                  <span>Bryz Academic Support</span>
                 </div>
               </a>
               <p className="footer-brand-desc">
@@ -847,8 +845,8 @@ export default function LandingPage({
               </div>
 
               {/* Merchant Title */}
-              <div className="qris-merchant-title">BRYZ ACADEMIC SUPPORT</div>
-              <div className="qris-merchant-sub">NMID: ID1024329012398 • Merchant Resmi</div>
+              <div className="qris-merchant-title">BRYZ ACADEMIC SUPPORT, COBLONG</div>
+              <div className="qris-merchant-sub">NMID: ID1024329012398</div>
 
               {/* QR Image or Fallback SVG */}
               <div style={{ margin: '18px 0', display: 'flex', justifyContent: 'center', position: 'relative' }}>
@@ -983,20 +981,41 @@ export default function LandingPage({
         </div>
       )}
 
-      {/* ===================== FLOATING WHATSAPP BUTTON ===================== */}
-      <a
-        href={defaultWaLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="floating-wa"
-        title="Konsultasi Cepat via WhatsApp"
-      >
-        <span className="floating-wa-dot" />
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
-        </svg>
-        <span>Chat Admin WA</span>
-      </a>
+      {/* ===================== FLOATING ACTIONS (QRIS & WHATSAPP) ===================== */}
+      <div className="floating-actions-container">
+        <button
+          type="button"
+          onClick={() => setShowQrisModal(true)}
+          className="floating-qris"
+          title="Lihat Kode Barcode QRIS Pembayaran"
+          aria-label="Lihat Kode Barcode QRIS Pembayaran"
+        >
+          <span className="floating-qris-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <path d="M7 7h.01M17 7h.01M7 17h.01" />
+            </svg>
+          </span>
+          <span className="floating-qris-label">Lihat Kode QRIS</span>
+        </button>
+
+        <a
+          href={defaultWaLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="floating-wa"
+          title="Konsultasi Cepat via WhatsApp"
+        >
+          <span className="floating-wa-dot" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+          </svg>
+          <span>Chat Admin WA</span>
+        </a>
+      </div>
     </>
   );
 }
