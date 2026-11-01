@@ -116,7 +116,7 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} autoComplete="off">
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
               Password Admin
@@ -129,6 +129,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: '40px', paddingLeft: '38px', height: '42px' }}
+                autoComplete="new-password"
                 autoFocus
               />
               {/* Lock SVG */}
