@@ -260,7 +260,7 @@ export default function LandingPage({
               <span>Bimbingan & Pengerjaan Akademik Terpercaya</span>
             </div>
             <h1 className="hero-title">
-              Raih Kelulusan & Nilai Terbaik Bersama <span className="hero-title-highlight">Bryz Academic</span>
+              Raih Kelulusan Nilai Terbaik Bersama <span className="hero-title-highlight">Bryz Academic</span>
             </h1>
             <p className="hero-description">
               Solusi bantuan akademik terpadu untuk skripsi, proposal, artikel ilmiah, makalah, esai, paper, hingga tugas teknik. Cepat, orisinil, bebas plagiarisme, dan bergaransi sampai ACC.
