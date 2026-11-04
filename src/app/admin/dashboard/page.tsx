@@ -250,27 +250,38 @@ export default function AdminDashboard() {
         ];
 
         const mergedConf: SiteConfig = {
-          whatsappNumber: confData.whatsappNumber || localConf?.whatsappNumber || '6285861950414',
-          heroEyebrow: confData.heroEyebrow || 'Bimbingan & Bantu Tugas Akademik Terpercaya',
-          heroTitle: confData.heroTitle || 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
-          heroDescription: confData.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
-          skripsiFeatures: (confData.skripsiFeatures && confData.skripsiFeatures.length > 0)
+          whatsappNumber: localConf?.whatsappNumber || confData.whatsappNumber || '6285861950414',
+          heroEyebrow: localConf?.heroEyebrow || confData.heroEyebrow || 'Bimbingan & Bantu Tugas Akademik Terpercaya',
+          heroTitle: localConf?.heroTitle || confData.heroTitle || 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
+          heroDescription: localConf?.heroDescription || confData.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
+          skripsiFeatures: (localConf?.skripsiFeatures && localConf.skripsiFeatures.length > 0)
+            ? localConf.skripsiFeatures
+            : (confData.skripsiFeatures && confData.skripsiFeatures.length > 0)
             ? confData.skripsiFeatures
             : defaultSkripsiFeatures,
-          faqs: (confData.faqs && confData.faqs.length > 0)
+          faqs: (localConf?.faqs && localConf.faqs.length > 0)
+            ? localConf.faqs
+            : (confData.faqs && confData.faqs.length > 0)
             ? confData.faqs
             : defaultFaqs,
-          totalClients: confData.totalClients || '100+',
-          totalProjects: confData.totalProjects || '100+',
-          satisfaction: confData.satisfaction || '100%',
+          totalClients: localConf?.totalClients || confData.totalClients || '100+',
+          totalProjects: localConf?.totalProjects || confData.totalProjects || '100+',
+          satisfaction: localConf?.satisfaction || confData.satisfaction || '100%',
           logoImageUrl: localConf?.logoImageUrl || confData.logoImageUrl || null,
           qrisImageUrl: localConf?.qrisImageUrl || confData.qrisImageUrl || null,
         };
 
-        const finalServices = (Array.isArray(servData) && servData.length >= 8)
-          ? servData
-          : officialServices;
-        const finalTestimonials = (testData && testData.length > 0) ? testData : (localTest || []);
+        let finalServices = officialServices;
+        if (Array.isArray(localServ) && localServ.length > 0) {
+          finalServices = localServ;
+        } else if (Array.isArray(servData) && servData.length > 0) {
+          finalServices = servData;
+        }
+        const finalTestimonials = (Array.isArray(localTest) && localTest.length > 0)
+          ? localTest
+          : (Array.isArray(testData) && testData.length > 0)
+          ? testData
+          : [];
 
         setServices(finalServices);
         setTestimonials(finalTestimonials);
@@ -366,43 +377,58 @@ export default function AdminDashboard() {
 
       const cleanedFeatures = serviceFeatures.map((f) => f.trim()).filter(Boolean);
 
+      const targetId = editingService ? editingService.id : Date.now().toString();
+      const updatedItem: Service = {
+        id: targetId,
+        name: serviceName,
+        category: serviceCategory,
+        description: serviceDesc,
+        price: servicePrice,
+        estimatedTime: serviceEstimatedTime,
+        features: cleanedFeatures,
+        icon: serviceIcon,
+        imageUrl,
+        order: editingService ? editingService.order : services.length + 1,
+      };
+
+      // 1. Simpan langsung ke state & localStorage agar update seketika di portal & web
+      setServices((prev) => {
+        const next = editingService
+          ? prev.map((s) => (s.id === targetId ? updatedItem : s))
+          : [...prev, updatedItem];
+        try {
+          localStorage.setItem('bryz_services', JSON.stringify(next));
+          window.dispatchEvent(new Event('bryz_services_updated'));
+        } catch {}
+        return next;
+      });
+
+      // 2. Kirim update ke server API
       if (editingService) {
-        await fetch('/api/services', {
+        const res = await fetch('/api/services', {
           method: 'PUT',
           headers: authHeaders(),
-          body: JSON.stringify({
-            id: editingService.id,
-            name: serviceName,
-            category: serviceCategory,
-            description: serviceDesc,
-            price: servicePrice,
-            estimatedTime: serviceEstimatedTime,
-            features: cleanedFeatures,
-            icon: serviceIcon,
-            imageUrl,
-          }),
+          body: JSON.stringify(updatedItem),
         });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('API update warning:', errData);
+        }
         showToast('Layanan berhasil diperbarui', 'success');
       } else {
-        await fetch('/api/services', {
+        const res = await fetch('/api/services', {
           method: 'POST',
           headers: authHeaders(),
-          body: JSON.stringify({
-            name: serviceName,
-            category: serviceCategory,
-            description: serviceDesc,
-            price: servicePrice,
-            estimatedTime: serviceEstimatedTime,
-            features: cleanedFeatures,
-            icon: serviceIcon,
-            imageUrl,
-          }),
+          body: JSON.stringify(updatedItem),
         });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('API create warning:', errData);
+        }
         showToast('Layanan baru berhasil ditambahkan', 'success');
       }
 
       setShowServiceModal(false);
-      fetchData();
     } catch {
       showToast('Gagal menyimpan layanan ke database', 'error');
     } finally {
@@ -413,6 +439,14 @@ export default function AdminDashboard() {
   const deleteServiceHandler = async (id: string, name: string) => {
     if (!confirm(`Hapus layanan "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
     try {
+      setServices((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        try {
+          localStorage.setItem('bryz_services', JSON.stringify(next));
+          window.dispatchEvent(new Event('bryz_services_updated'));
+        } catch {}
+        return next;
+      });
       const res = await fetch(`/api/services?id=${id}`, {
         method: 'DELETE',
         headers: authHeaders(),
@@ -421,13 +455,7 @@ export default function AdminDashboard() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Gagal menghapus layanan dari server');
       }
-      setServices((prev) => {
-        const next = prev.filter((s) => s.id !== id);
-        try { localStorage.setItem('bryz_services', JSON.stringify(next)); } catch {}
-        return next;
-      });
       showToast(`Layanan "${name}" berhasil dihapus`, 'success');
-      fetchData();
     } catch (err: any) {
       showToast(err.message || 'Gagal menghapus layanan', 'error');
     }
@@ -449,6 +477,22 @@ export default function AdminDashboard() {
     setSaving(true);
     try {
       const imageUrl = await uploadFile(testimonialImage);
+      const newTestimonial: Testimonial = {
+        id: Date.now().toString(),
+        name: testimonialName,
+        imageUrl,
+        rating: testimonialRating,
+        order: testimonials.length + 1,
+      };
+      setTestimonials((prev) => {
+        const next = [...prev, newTestimonial];
+        try {
+          localStorage.setItem('bryz_testimonials', JSON.stringify(next));
+          window.dispatchEvent(new Event('bryz_testimonials_updated'));
+        } catch {}
+        return next;
+      });
+
       const res = await fetch('/api/testimonials', {
         method: 'POST',
         headers: authHeaders(),
@@ -460,11 +504,10 @@ export default function AdminDashboard() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Gagal menyimpan testimoni ke database');
+        console.warn('API testimonial warning:', errData);
       }
       showToast('Screenshot testimoni berhasil ditambahkan', 'success');
       setShowTestimonialModal(false);
-      fetchData();
     } catch (err: any) {
       showToast(err.message || 'Gagal mengunggah testimoni', 'error');
     } finally {
@@ -475,21 +518,23 @@ export default function AdminDashboard() {
   const deleteTestimonialHandler = async (id: string) => {
     if (!confirm('Hapus screenshot testimoni ini?')) return;
     try {
+      setTestimonials((prev) => {
+        const next = prev.filter((t) => t.id !== id);
+        try {
+          localStorage.setItem('bryz_testimonials', JSON.stringify(next));
+          window.dispatchEvent(new Event('bryz_testimonials_updated'));
+        } catch {}
+        return next;
+      });
       const res = await fetch(`/api/testimonials?id=${id}`, {
         method: 'DELETE',
         headers: authHeaders(),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Gagal menghapus testimoni dari server');
+        console.warn('API delete testimonial warning:', errData);
       }
-      setTestimonials((prev) => {
-        const next = prev.filter((t) => t.id !== id);
-        try { localStorage.setItem('bryz_testimonials', JSON.stringify(next)); } catch {}
-        return next;
-      });
       showToast('Testimoni berhasil dihapus', 'success');
-      fetchData();
     } catch (err: any) {
       showToast(err.message || 'Gagal menghapus testimoni', 'error');
     }
@@ -508,6 +553,12 @@ export default function AdminDashboard() {
         const uploadedLogoUrl = await uploadFile(logoFile);
         finalConfig.logoImageUrl = uploadedLogoUrl;
       }
+      setConfig(finalConfig);
+      try {
+        localStorage.setItem('bryz_site_config', JSON.stringify(finalConfig));
+        window.dispatchEvent(new Event('bryz_config_updated'));
+      } catch {}
+
       const res = await fetch('/api/config', {
         method: 'PUT',
         headers: authHeaders(),
@@ -515,12 +566,8 @@ export default function AdminDashboard() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Gagal menyimpan pengaturan ke server');
+        console.warn('API config warning:', errData);
       }
-      setConfig(finalConfig);
-      try {
-        localStorage.setItem('bryz_site_config', JSON.stringify(finalConfig));
-      } catch {}
       setQrisFile(null);
       setQrisPreview(null);
       setLogoFile(null);

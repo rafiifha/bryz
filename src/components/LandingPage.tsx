@@ -75,6 +75,35 @@ export default function LandingPage({
       }
     } catch {}
 
+    // Listener real-time sinkronisasi antar-tab saat admin melakukan edit
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === 'bryz_services' && e.newValue) {
+        try { setServices(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'bryz_site_config' && e.newValue) {
+        try { setConfig(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'bryz_testimonials' && e.newValue) {
+        try { setTestimonials(JSON.parse(e.newValue)); } catch {}
+      }
+    };
+
+    const handleCustomSync = () => {
+      try {
+        const ls = localStorage.getItem('bryz_services');
+        if (ls) setServices(JSON.parse(ls));
+        const lc = localStorage.getItem('bryz_site_config');
+        if (lc) setConfig(JSON.parse(lc));
+        const lt = localStorage.getItem('bryz_testimonials');
+        if (lt) setTestimonials(JSON.parse(lt));
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleStorageUpdate);
+    window.addEventListener('bryz_services_updated', handleCustomSync);
+    window.addEventListener('bryz_config_updated', handleCustomSync);
+    window.addEventListener('bryz_testimonials_updated', handleCustomSync);
+
     // 2. Fetch live data dari API backend & status blob
     Promise.all([
       fetch('/api/services', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
@@ -86,10 +115,12 @@ export default function LandingPage({
         const isBlobActive = Boolean(st?.blobConnected);
 
         if (Array.isArray(s) && s.length > 0) {
-          setServices(s);
-          try { localStorage.setItem('bryz_services', JSON.stringify(s)); } catch {}
+          if (isBlobActive || !hasLocalServices) {
+            setServices(s);
+            try { localStorage.setItem('bryz_services', JSON.stringify(s)); } catch {}
+          }
         }
-        if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials || t.length > 0)) {
+        if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials)) {
           setTestimonials(t);
         }
         if (c && typeof c === 'object') {
@@ -98,12 +129,12 @@ export default function LandingPage({
             try { localStorage.setItem('bryz_site_config', JSON.stringify(c)); } catch {}
           } else {
             setConfig((prev) => {
-              const updated = {
-                ...prev,
+              const updated: SiteConfig = {
                 ...c,
+                ...prev, // Data yang diedit di admin lokal tidak tertimpa default server
                 logoImageUrl: prev.logoImageUrl || c.logoImageUrl,
                 qrisImageUrl: prev.qrisImageUrl || c.qrisImageUrl,
-                whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : c.whatsappNumber,
+                whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : (c.whatsappNumber || prev.whatsappNumber),
               };
               try { localStorage.setItem('bryz_site_config', JSON.stringify(updated)); } catch {}
               return updated;
@@ -112,6 +143,13 @@ export default function LandingPage({
         }
       })
       .catch(() => {});
+
+    return () => {
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('bryz_services_updated', handleCustomSync);
+      window.removeEventListener('bryz_config_updated', handleCustomSync);
+      window.removeEventListener('bryz_testimonials_updated', handleCustomSync);
+    };
   }, []);
 
   const getWaLink = (serviceName?: string) => {

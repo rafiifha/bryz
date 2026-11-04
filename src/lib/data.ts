@@ -5,7 +5,7 @@ import os from 'os';
 import { put, list, del } from '@vercel/blob';
 
 // Deteksi environment serverless Vercel / Cloud
-const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION || process.env.NODE_ENV === 'production';
+const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION;
 const DATA_DIR = isServerless
   ? path.join(os.tmpdir(), 'bryz-academic-data')
   : path.join(process.cwd(), 'data');
@@ -250,7 +250,17 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
     return globalMemoryCache[key] as T;
   }
 
-  // 3. Local fallback
+  // 3. Local fallback - Check project directory first, then DATA_DIR
+  try {
+    const projectPath = path.join(process.cwd(), 'data', `${key}.json`);
+    if (fs.existsSync(projectPath)) {
+      const content = fs.readFileSync(projectPath, 'utf-8');
+      const val = JSON.parse(content);
+      globalMemoryCache[key] = val;
+      return val;
+    }
+  } catch {}
+
   try {
     ensureDataDir();
     const filePath = path.join(DATA_DIR, `${key}.json`);
@@ -260,9 +270,7 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
       globalMemoryCache[key] = val;
       return val;
     }
-  } catch {
-    // silent catch
-  }
+  } catch {}
 
   return defaultValue;
 }
@@ -272,11 +280,27 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
   globalMemoryCache[key] = data;
   const jsonStr = JSON.stringify(data, null, 2);
 
-  // 1. Try Vercel Blob (supports token or OIDC BLOB_STORE_ID)
+  // 1. Maintain local copy in project directory if writable
+  try {
+    const projectDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(projectDir)) {
+      fs.mkdirSync(projectDir, { recursive: true });
+    }
+    const projectPath = path.join(projectDir, `${key}.json`);
+    fs.writeFileSync(projectPath, jsonStr);
+  } catch {}
+
+  // 2. Maintain local/tmp copy in DATA_DIR
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, `${key}.json`);
+    fs.writeFileSync(filePath, jsonStr);
+  } catch {}
+
+  // 3. Try Vercel Blob (supports token or OIDC BLOB_STORE_ID)
   const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
   if (hasBlob) {
     try {
-      // Simpan file baru dengan random suffix agar tidak pernah throw BlobAlreadyExistsError
       const newBlob = await put(`db/${key}.json`, jsonStr, {
         access: 'public',
         addRandomSuffix: true,
@@ -290,20 +314,9 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
           await del(oldBlobs.map((b) => b.url));
         }
       } catch {}
-
-      return;
     } catch (err) {
       console.warn(`[Vercel Blob] Write warning for ${key}:`, err);
     }
-  }
-
-  // 2. Maintain local/tmp copy if possible
-  try {
-    ensureDataDir();
-    const filePath = path.join(DATA_DIR, `${key}.json`);
-    fs.writeFileSync(filePath, jsonStr);
-  } catch {
-    // silent catch on read-only environments
   }
 }
 
@@ -330,8 +343,28 @@ export async function addService(service: Omit<Service, 'id' | 'order'>): Promis
 
 export async function updateService(id: string, updates: Partial<Service>): Promise<Service | null> {
   const services = await getServices();
-  const index = services.findIndex((s) => s.id === id);
-  if (index === -1) return null;
+  let index = services.findIndex((s) => String(s.id) === String(id));
+  if (index === -1 && updates.name) {
+    index = services.findIndex((s) => s.name.toLowerCase() === updates.name?.toLowerCase());
+  }
+  if (index === -1) {
+    const newService: Service = {
+      id: String(id),
+      name: updates.name || 'Layanan Baru',
+      description: updates.description || '',
+      price: updates.price || 'Hubungi Admin',
+      icon: updates.icon || '📚',
+      imageUrl: updates.imageUrl || null,
+      category: updates.category,
+      features: updates.features,
+      estimatedTime: updates.estimatedTime,
+      order: services.length + 1,
+      ...updates,
+    };
+    services.push(newService);
+    await saveServices(services);
+    return newService;
+  }
   services[index] = { ...services[index], ...updates };
   await saveServices(services);
   return services[index];
