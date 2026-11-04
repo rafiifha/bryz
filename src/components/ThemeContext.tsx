@@ -13,20 +13,18 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Check saved theme or system preference
+    // Check saved theme - default is light
     const saved = localStorage.getItem('bryz_theme') as Theme | null;
     if (saved === 'light' || saved === 'dark') {
       setThemeState(saved);
       document.documentElement.setAttribute('data-theme', saved);
     } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = prefersDark ? 'dark' : 'light';
-      setThemeState(initial);
-      document.documentElement.setAttribute('data-theme', initial);
+      setThemeState('light');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
     setMounted(true);
   }, []);

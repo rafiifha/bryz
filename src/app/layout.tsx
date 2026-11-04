@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" data-theme="light" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -23,10 +23,8 @@ export default function RootLayout({
                   var saved = localStorage.getItem('bryz_theme');
                   if (saved === 'light' || saved === 'dark') {
                     document.documentElement.setAttribute('data-theme', saved);
-                  } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-                    document.documentElement.setAttribute('data-theme', 'light');
                   } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
                   }
                 } catch (e) {}
               })();
