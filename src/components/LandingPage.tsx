@@ -895,15 +895,15 @@ export default function LandingPage({
       <footer className="footer-clean">
         <div className="container">
           <div className="footer-grid">
-            {/* Column 1: Brand & Mission */}
-            <div>
-              <a href="/" className="navbar-logo" style={{ marginBottom: '14px' }}>
+            {/* Column 1: Brand & Identity */}
+            <div className="footer-col-brand">
+              <a href="/" className="navbar-logo" style={{ marginBottom: '14px', textDecoration: 'none' }}>
                 {config.logoImageUrl ? (
                   <img
                     src={config.logoImageUrl}
                     alt="Bryz Academic Support"
                     className="navbar-logo-img"
-                    style={{ maxHeight: '36px', width: 'auto', objectFit: 'contain' }}
+                    style={{ maxHeight: '34px', width: 'auto', objectFit: 'contain' }}
                   />
                 ) : (
                   <div className="navbar-logo-icon">
@@ -918,54 +918,79 @@ export default function LandingPage({
                 </div>
               </a>
               <p className="footer-brand-desc">
-                Teman bimbingan dan asistensi tugas akademik tepercaya di seluruh Indonesia. Privasi 100% aman, bebas plagiasi, dan garansi dibantu sampai tuntas.
+                Layanan asistensi dan bimbingan tugas akademik terpercaya. Privasi aman, pengecekan Turnitin resmi, dan bergaransi revisi sampai tuntas.
               </p>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '16px', padding: '4px 10px', background: 'var(--tag-bg)', borderRadius: '6px', fontSize: '0.78rem', color: 'var(--tag-text)', fontWeight: 600 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-                <span>Konsultasi 24 Jam • Respons Cepat</span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '16px', padding: '6px 12px', background: 'var(--tag-bg)', borderRadius: '20px', fontSize: '0.78rem', color: 'var(--tag-text)', fontWeight: 600 }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block', flexShrink: 0 }} />
+                <span>Konsultasi Buka • Siap Respons Cepat</span>
               </div>
             </div>
 
-            {/* Column 2: Layanan */}
+            {/* Column 2: Pilihan Layanan */}
             <div>
               <div className="footer-heading">Pilihan Layanan</div>
               <ul className="footer-links">
-                <li><a href="#layanan" className="footer-link">Skripsi (per Bab)</a></li>
-                <li><a href="#layanan" className="footer-link">Proposal Skripsi</a></li>
-                <li><a href="#layanan" className="footer-link">Artikel Ilmiah &amp; Jurnal</a></li>
-                <li><a href="#layanan" className="footer-link">Makalah Akademik</a></li>
-                <li><a href="#layanan" className="footer-link">Esai, Opini &amp; Paper</a></li>
-                <li><a href="#layanan" className="footer-link">Tugas Teknik &amp; Policy Brief</a></li>
+                <li><a href="#pricelist" className="footer-link">Skripsi &amp; Tugas Akhir</a></li>
+                <li><a href="#pricelist" className="footer-link">Proposal Skripsi</a></li>
+                <li><a href="#pricelist" className="footer-link">Artikel Ilmiah &amp; Jurnal</a></li>
+                <li><a href="#pricelist" className="footer-link">Makalah Akademik</a></li>
+                <li><a href="#pricelist" className="footer-link">Esai, Opini &amp; Paper</a></li>
+                <li><a href="#pricelist" className="footer-link">Tugas Teknik &amp; Olah Data</a></li>
               </ul>
             </div>
 
-            {/* Column 3: Jaminan & Standar */}
+            {/* Column 3: Navigasi Halaman */}
             <div>
-              <div className="footer-heading">Jaminan Kami</div>
+              <div className="footer-heading">Navigasi</div>
               <ul className="footer-links">
-                <li className="footer-link">🛡️ Privasi 100% Terjaga</li>
-                <li className="footer-link">📊 Lolos Cek Turnitin / Orisinal</li>
-                <li className="footer-link">🔄 Garansi Revisi Sampai Tuntas</li>
-                <li className="footer-link">⚡ Pengerjaan Tepat Waktu / Kilat</li>
-                <li className="footer-link">🤝 Bimbingan Ramah &amp; Jelas</li>
+                <li><a href="#pricelist" className="footer-link">Daftar Harga Terbuka</a></li>
+                <li><a href="#keunggulan" className="footer-link">Standar Mutu &amp; Keunggulan</a></li>
+                <li><a href="#alur" className="footer-link">Alur Pengerjaan Tugas</a></li>
+                <li><a href="#testimoni" className="footer-link">Bukti &amp; Testimoni ACC</a></li>
+                <li><a href="#faq" className="footer-link">Tanya Jawab (FAQ)</a></li>
               </ul>
             </div>
 
-            {/* Column 4: Navigasi & Admin */}
+            {/* Column 4: Bantuan & Kontak */}
             <div>
-              <div className="footer-heading">Bantuan & Kontak</div>
+              <div className="footer-heading">Hubungi Kami</div>
               <ul className="footer-links">
                 <li>
-                  <a href={defaultWaLink} target="_blank" rel="noopener noreferrer" className="footer-link" style={{ color: 'var(--success)', fontWeight: 600 }}>
-                    💬 WhatsApp Admin
+                  <a
+                    href={defaultWaLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-link"
+                    style={{ color: 'var(--success)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                    </svg>
+                    <span>WhatsApp: +{config.whatsappNumber}</span>
                   </a>
                 </li>
-                <li><a href="#pricelist" className="footer-link">Cek Daftar Harga Terbuka</a></li>
-                <li><a href="#testimoni" className="footer-link">Screenshot Bukti ACC</a></li>
-                <li><a href="#faq" className="footer-link">Tanya Jawab (FAQ)</a></li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setShowQrisModal(true)}
+                    className="footer-link"
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="14" y="14" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span>Barcode QRIS Pembayaran</span>
+                  </button>
+                </li>
+                <li style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Jam Operasional: 24 Jam Fleksibel
+                </li>
                 <li>
                   <a href="/admin" className="footer-link" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
-                    🔒 Login Portal Admin
+                    Portal Admin
                   </a>
                 </li>
               </ul>
@@ -975,14 +1000,23 @@ export default function LandingPage({
           {/* Sub-Footer Bottom Bar */}
           <div className="footer-bottom">
             <p className="footer-copy">
-              © {new Date().getFullYear()} <strong>Bryz Academic Support</strong>. Hak Cipta Dilindungi Undang-Undang.
+              © {new Date().getFullYear()} <strong>Bryz Academic Support</strong>. Seluruh hak cipta dilindungi undang-undang.
             </p>
             <div className="footer-bottom-links">
-              <span className="footer-bottom-link">Privasi Terjaga</span>
+              <a
+                href="#pricelist"
+                className="footer-bottom-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                Kembali ke Atas ↑
+              </a>
               <span style={{ color: 'var(--border-color)' }}>•</span>
-              <span className="footer-bottom-link">Bebas Plagiasi</span>
-              <span style={{ color: 'var(--border-color)' }}>•</span>
-              <a href="/admin" className="footer-bottom-link">Admin Console</a>
+              <a href="/admin" className="footer-bottom-link">
+                Admin Console
+              </a>
             </div>
           </div>
         </div>
