@@ -261,7 +261,7 @@ export default function LandingPage({
           {/* Desktop Navigation Links */}
           <nav>
             <ul className={`navbar-nav ${mobileMenuOpen ? 'open' : ''}`}>
-              <li><a href="#layanan" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Layanan &amp; Biaya</a></li>
+              <li><a href="#pricelist" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Daftar Harga</a></li>
               <li><a href="#keunggulan" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Keunggulan</a></li>
               <li><a href="#alur" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Alur Kerja</a></li>
               <li><a href="#testimoni" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Testimoni</a></li>
@@ -321,8 +321,8 @@ export default function LandingPage({
                 </svg>
                 <span>Konsultasi Gratis via WhatsApp</span>
               </a>
-              <a href="#layanan" className="btn btn-editorial-outline btn-lg">
-                <span>Cek Layanan &amp; Biaya</span>
+              <a href="#pricelist" className="btn btn-editorial-outline btn-lg">
+                <span>Cek Daftar Harga</span>
               </a>
             </div>
 
@@ -397,17 +397,17 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ===================== SERVICES SECTION (Paper - Editorial Asymmetric Grid) ===================== */}
-      <section className="section section-paper" id="layanan">
-        <div id="pricelist" style={{ position: 'relative', top: '-80px' }} />
+      {/* ===================== DAFTAR HARGA TERBUKA ===================== */}
+      <section className="section section-paper" id="pricelist">
+        <div id="layanan" style={{ position: 'relative', top: '-80px' }} />
         <div className="container">
-          <h2 className="section-title">Pilihan Layanan &amp; Biaya Terbuka</h2>
+          <h2 className="section-title">Daftar Harga Terbuka</h2>
           <p className="section-subtitle">
-            Perkiraan biaya transparan, ramah kantong, dan fleksibel. Dikerjakan langsung oleh tim fresh graduate PTN top 3 sesuai jenjang pendidikan Anda.
+            Perkiraan biaya ramah kantong dan transparan. Biaya fleksibel dan bisa disesuaikan dengan tingkat kesulitan serta deadline tugas Anda.
           </p>
 
           {/* Segmented Filter Controls */}
-          <div className="tabs-container-wrapper" style={{ marginBottom: '32px' }}>
+          <div className="tabs-container-wrapper">
             <div className="tabs-segmented">
               <button
                 type="button"
@@ -440,134 +440,129 @@ export default function LandingPage({
             </div>
           </div>
 
-          <div className="services-editorial-grid">
-            {filteredServices.length > 0 && (() => {
-              const sorted = [...filteredServices].sort((a, b) => a.order - b.order);
-              const isSkripsiFirst = sorted[0].name.toLowerCase().includes('skripsi') && !sorted[0].name.toLowerCase().includes('proposal');
-              
-              const featured = isSkripsiFirst ? sorted[0] : null;
-              const modularItems = isSkripsiFirst ? sorted.slice(1) : sorted;
+          {/* Desktop Clean Table View */}
+          <div className="table-card pricelist-desktop-view">
+            <table className="clean-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '34%' }}>Jenis Layanan</th>
+                  <th style={{ width: '32%' }}>Fasilitas &amp; Standar Kualitas</th>
+                  <th style={{ width: '16%' }}>Waktu Pengerjaan</th>
+                  <th style={{ width: '18%', textAlign: 'right' }}>Perkiraan Biaya</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
+                  const category = getCategoryFromService(service.name);
+                  const timeEst = getEstimatedTime(service.name);
+                  const features = getFeatures(service.name);
 
-              return (
-                <>
-                  {featured && (
-                    <div key={featured.id} className="service-card-featured">
-                      <span className="service-card-featured-tag">PAKET LENGKAP</span>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                          <div className="service-icon-box" style={{ marginBottom: 0 }}>{featured.icon}</div>
-                          <span className="table-service-badge">{getCategoryFromService(featured.name)}</span>
-                          <span className="time-badge" style={{ fontSize: '0.76rem', padding: '4px 10px' }}>
-                            ⏱️ {getEstimatedTime(featured.name)}
-                          </span>
-                        </div>
-                        <h3 className="service-title" style={{ fontSize: '1.45rem', marginBottom: '10px' }}>
-                          {featured.name}
-                        </h3>
-                        <p className="service-description" style={{ marginBottom: '14px' }}>
-                          {featured.description}
-                        </p>
-                        
-                        {/* Deliverables Checklist */}
-                        <ul className="service-deliverables-list">
-                          {activeSkripsiFeatures.map((feat, idx) => (
-                            <li key={idx}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              <span>{feat}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--c-ivory)', padding: '24px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', height: '100%', justifyContent: 'center' }}>
-                        <div>
-                          <span style={{ fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-                            BIAYA
-                          </span>
-                          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--c-royal-blue)', marginTop: '4px' }}>
-                            {featured.price}
-                          </div>
-                        </div>
-
-                        <a
-                          href={getWaLink(featured.name)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-whatsapp btn-lg"
-                          style={{ width: '100%' }}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
-                          </svg>
-                          <span>Tanya Paket Layanan</span>
-                        </a>
-                      </div>
-                    </div>
-                  )}
-
-                  {modularItems.map((service) => {
-                    const category = getCategoryFromService(service.name);
-                    const timeEst = getEstimatedTime(service.name);
-                    const features = getFeatures(service.name);
-
-                    return (
-                      <div key={service.id} className="service-card-modular">
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                            <div className="service-icon-box" style={{ marginBottom: 0 }}>{service.icon}</div>
+                  return (
+                    <tr key={service.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                          <div className="pricelist-icon-box">{service.icon}</div>
+                          <div>
+                            <div className="table-service-name">{service.name}</div>
                             <span className="table-service-badge">{category}</span>
                           </div>
-                          
-                          <h3 className="service-title" style={{ fontSize: '1.2rem', marginBottom: '8px' }}>
-                            {service.name}
-                          </h3>
-                          <p className="service-description" style={{ marginBottom: '14px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-                            {service.description}
-                          </p>
-
-                          {/* Deliverables Checklist matching Daftar Terbuka */}
-                          <div className="feature-list" style={{ marginBottom: '18px' }}>
-                            {features.map((feat, idx) => (
-                              <div key={idx} className="feature-item">
-                                <span className="feature-check">✓</span>
-                                <span>{feat}</span>
-                              </div>
-                            ))}
-                          </div>
                         </div>
-
-                        <div className="service-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-                          <div>
-                            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
-                              ESTIMASI BIAYA
+                      </td>
+                      <td>
+                        <div className="feature-list">
+                          {features.map((feat, idx) => (
+                            <div key={idx} className="feature-item">
+                              <span className="feature-check">✓</span>
+                              <span>{feat}</span>
                             </div>
-                            <div className="service-price-pill" style={{ marginTop: '3px', fontWeight: 800 }}>
-                              {service.price}
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span className="time-badge" style={{ fontSize: '0.75rem', padding: '4px 8px' }}>
-                              ⏱️ {timeEst}
-                            </span>
-                            <a
-                              href={getWaLink(service.name)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-whatsapp btn-sm"
-                            >
-                              <span>Konsultasi</span>
-                            </a>
-                          </div>
+                          ))}
                         </div>
+                      </td>
+                      <td>
+                        <span className="time-badge">
+                          ⏱️ {timeEst}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="table-price">{service.price}</div>
+                        <span className="table-price-sub">Bisa nego</span>
+                        <a
+                          href={getWaLink(service.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-whatsapp btn-sm"
+                          style={{ marginTop: '8px', display: 'inline-flex' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                          </svg>
+                          <span>Tanya Admin</span>
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Clean Cards View */}
+          <div className="pricelist-mobile-view">
+            {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
+              const category = getCategoryFromService(service.name);
+              const timeEst = getEstimatedTime(service.name);
+              const features = getFeatures(service.name);
+
+              return (
+                <div key={service.id} className="pricelist-mobile-card">
+                  {/* Top: Icon + Title + Category Badge ONLY (No price crowding) */}
+                  <div className="pm-card-top">
+                    <div className="pm-card-icon">{service.icon}</div>
+                    <div className="pm-card-title-box">
+                      <div className="pm-card-title">{service.name}</div>
+                      <span className="table-service-badge">{category}</span>
+                    </div>
+                  </div>
+
+                  {/* Feature Checklist */}
+                  <div className="feature-list" style={{ margin: '14px 0 12px' }}>
+                    {features.map((feat, idx) => (
+                      <div key={idx} className="feature-item">
+                        <span className="feature-check">✓</span>
+                        <span>{feat}</span>
                       </div>
-                    );
-                  })}
-                </>
+                    ))}
+                  </div>
+
+                  {/* Dedicated Price & Time Section - Completely separated */}
+                  <div className="pm-card-price-row">
+                    <div className="pm-card-price-info">
+                      <span className="pm-price-label">Perkiraan Biaya</span>
+                      <div className="pm-card-price-val">{service.price}</div>
+                      <span className="table-price-sub">Biaya fleksibel &amp; bisa nego/cicil</span>
+                    </div>
+                    <div className="time-badge">
+                      ⏱️ {timeEst}
+                    </div>
+                  </div>
+
+                  {/* Action CTA Button */}
+                  <div style={{ marginTop: '12px' }}>
+                    <a
+                      href={getWaLink(service.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-whatsapp pm-card-btn"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                      </svg>
+                      <span>Tanya &amp; Pesan via WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
               );
-            })()}
+            })}
           </div>
         </div>
       </section>
@@ -926,7 +921,7 @@ export default function LandingPage({
                     💬 WhatsApp Admin
                   </a>
                 </li>
-                <li><a href="#layanan" className="footer-link">Pilihan Layanan &amp; Biaya</a></li>
+                <li><a href="#pricelist" className="footer-link">Cek Daftar Harga Terbuka</a></li>
                 <li><a href="#testimoni" className="footer-link">Screenshot Bukti ACC</a></li>
                 <li><a href="#faq" className="footer-link">Tanya Jawab (FAQ)</a></li>
                 <li>
