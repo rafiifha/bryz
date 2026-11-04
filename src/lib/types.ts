@@ -3,6 +3,9 @@ export interface Service {
   id: string;
   name: string;
   description: string;
+  category?: string;
+  features?: string[];
+  estimatedTime?: string;
   price: string;
   icon: string;
   imageUrl: string | null;

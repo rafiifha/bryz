@@ -85,8 +85,9 @@ export default function LandingPage({
       .then(([s, t, c, st]) => {
         const isBlobActive = Boolean(st?.blobConnected);
 
-        if (Array.isArray(s) && (isBlobActive || !hasLocalServices)) {
+        if (Array.isArray(s) && s.length > 0) {
           setServices(s);
+          try { localStorage.setItem('bryz_services', JSON.stringify(s)); } catch {}
         }
         if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials || t.length > 0)) {
           setTestimonials(t);
@@ -133,8 +134,7 @@ export default function LandingPage({
 
   const getEstimatedTime = (name: string): string => {
     const lower = name.toLowerCase();
-    if (lower.includes('skripsi')) return '5 - 14 Hari (Fleksibel)';
-    if (lower.includes('proposal')) return '3 - 7 Hari';
+    if (lower.includes('skripsi') || lower.includes('proposal')) return '5 - 14 Hari (Fleksibel)';
     if (lower.includes('artikel') || lower.includes('jurnal')) return '3 - 5 Hari';
     if (lower.includes('teknik')) return '2 - 5 Hari / Kilat';
     if (lower.includes('policy') || lower.includes('brief')) return '1 - 2 Hari / Kilat';
@@ -160,9 +160,10 @@ export default function LandingPage({
 
   const filteredServices = services.filter((service) => {
     if (selectedCategory === 'all') return true;
-    if (selectedCategory === 'skripsi') return service.name.toLowerCase().includes('skripsi') || service.name.toLowerCase().includes('proposal');
-    if (selectedCategory === 'ilmiah') return service.name.toLowerCase().includes('artikel') || service.name.toLowerCase().includes('jurnal') || service.name.toLowerCase().includes('makalah') || service.name.toLowerCase().includes('esai') || service.name.toLowerCase().includes('paper') || service.name.toLowerCase().includes('policy') || service.name.toLowerCase().includes('brief');
-    if (selectedCategory === 'teknik') return service.name.toLowerCase().includes('teknik') || service.name.toLowerCase().includes('coding') || service.name.toLowerCase().includes('cad');
+    const cat = (service.category || getCategoryFromService(service.name)).toLowerCase();
+    if (selectedCategory === 'skripsi') return cat.includes('skripsi') || cat.includes('proposal') || service.name.toLowerCase().includes('skripsi') || service.name.toLowerCase().includes('proposal');
+    if (selectedCategory === 'ilmiah') return cat.includes('publikasi') || cat.includes('karya') || cat.includes('ilmiah') || service.name.toLowerCase().includes('artikel') || service.name.toLowerCase().includes('jurnal') || service.name.toLowerCase().includes('makalah') || service.name.toLowerCase().includes('esai') || service.name.toLowerCase().includes('paper') || service.name.toLowerCase().includes('policy') || service.name.toLowerCase().includes('brief');
+    if (selectedCategory === 'teknik') return cat.includes('teknik') || service.name.toLowerCase().includes('teknik') || service.name.toLowerCase().includes('coding') || service.name.toLowerCase().includes('cad');
     return true;
   });
 
@@ -453,9 +454,9 @@ export default function LandingPage({
               </thead>
               <tbody>
                 {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
-                  const category = getCategoryFromService(service.name);
-                  const timeEst = getEstimatedTime(service.name);
-                  const features = getFeatures(service.name);
+                  const category = service.category || getCategoryFromService(service.name);
+                  const timeEst = service.estimatedTime || getEstimatedTime(service.name);
+                  const features = (service.features && service.features.length > 0) ? service.features : getFeatures(service.name);
 
                   return (
                     <tr key={service.id}>
@@ -509,9 +510,9 @@ export default function LandingPage({
           {/* Mobile Clean Cards View */}
           <div className="pricelist-mobile-view">
             {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
-              const category = getCategoryFromService(service.name);
-              const timeEst = getEstimatedTime(service.name);
-              const features = getFeatures(service.name);
+              const category = service.category || getCategoryFromService(service.name);
+              const timeEst = service.estimatedTime || getEstimatedTime(service.name);
+              const features = (service.features && service.features.length > 0) ? service.features : getFeatures(service.name);
 
               return (
                 <div key={service.id} className="pricelist-mobile-card">

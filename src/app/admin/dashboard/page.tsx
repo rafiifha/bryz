@@ -7,6 +7,137 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 type Tab = 'services' | 'testimonials' | 'settings';
 
+const DEFAULT_OFFICIAL_SERVICES: Service[] = [
+  {
+    id: '1',
+    name: 'Skripsi',
+    category: 'Skripsi & Proposal',
+    description: 'Garansi revisi sampai ACC, lolos cek Turnitin < 15%, serta bimbingan materi & olah data lengkap.',
+    features: [
+      'Garansi revisi sampai ACC',
+      'Lolos cek Turnitin < 15%',
+      'Bimbingan & Olah Data',
+    ],
+    estimatedTime: '5 - 14 Hari (Fleksibel)',
+    price: 'Mulai Rp 500.000 / Bab',
+    icon: '📚',
+    imageUrl: null,
+    order: 1,
+  },
+  {
+    id: '2',
+    name: 'Proposal Skripsi',
+    category: 'Skripsi & Proposal',
+    description: 'Garansi revisi sampai ACC, lolos cek Turnitin < 15%, serta bimbingan materi & olah data lengkap.',
+    features: [
+      'Garansi revisi sampai ACC',
+      'Lolos cek Turnitin < 15%',
+      'Bimbingan & Olah Data',
+    ],
+    estimatedTime: '5 - 14 Hari (Fleksibel)',
+    price: 'Mulai Rp 100.000',
+    icon: '📋',
+    imageUrl: null,
+    order: 2,
+  },
+  {
+    id: '3',
+    name: 'Artikel Ilmiah & Jurnal',
+    category: 'Publikasi Ilmiah',
+    description: 'Format standar Jurnal / SINTA, sitasi Mendeley / Zotero rapi, dan bebas plagiasi.',
+    features: [
+      'Format Standar Jurnal / SINTA',
+      'Sitasi Mendeley / Zotero',
+      'Bebas Plagiasi',
+    ],
+    estimatedTime: '3 - 5 Hari',
+    price: 'Mulai Rp 100.000',
+    icon: '📰',
+    imageUrl: null,
+    order: 3,
+  },
+  {
+    id: '4',
+    name: 'Makalah Akademik',
+    category: 'Karya Tulis',
+    description: 'Bebas plagiarisme, referensi jurnal terkini, serta garansi revisi gratis.',
+    features: [
+      'Bebas Plagiarisme',
+      'Referensi Jurnal Terkini',
+      'Garansi Revisi Gratis',
+    ],
+    estimatedTime: '1 - 3 Hari (Bisa Kilat)',
+    price: 'Mulai Rp 50.000',
+    icon: '📝',
+    imageUrl: null,
+    order: 4,
+  },
+  {
+    id: '5',
+    name: 'Esai & Opini',
+    category: 'Karya Tulis',
+    description: 'Bebas plagiarisme, referensi jurnal terkini, serta garansi revisi gratis.',
+    features: [
+      'Bebas Plagiarisme',
+      'Referensi Jurnal Terkini',
+      'Garansi Revisi Gratis',
+    ],
+    estimatedTime: '1 - 3 Hari (Bisa Kilat)',
+    price: 'Mulai Rp 50.000',
+    icon: '✍️',
+    imageUrl: null,
+    order: 5,
+  },
+  {
+    id: '6',
+    name: 'Paper & Review Jurnal',
+    category: 'Publikasi Ilmiah',
+    description: 'Format standar Jurnal / SINTA, sitasi Mendeley / Zotero rapi, dan bebas plagiasi.',
+    features: [
+      'Format Standar Jurnal / SINTA',
+      'Sitasi Mendeley / Zotero',
+      'Bebas Plagiasi',
+    ],
+    estimatedTime: '3 - 5 Hari',
+    price: 'Mulai Rp 50.000',
+    icon: '🔬',
+    imageUrl: null,
+    order: 6,
+  },
+  {
+    id: '7',
+    name: 'Tugas Teknik (Engineering)',
+    category: 'Tugas Teknik',
+    description: 'Kode/perhitungan terverifikasi, lengkap source code & dokumentasi, serta testing dan konsultasi.',
+    features: [
+      'Kode/Perhitungan Terverifikasi',
+      'Source code & Dokumentasi',
+      'Testing & Konsultasi',
+    ],
+    estimatedTime: '2 - 5 Hari / Kilat',
+    price: 'Mulai Rp 100.000',
+    icon: '⚙️',
+    imageUrl: null,
+    order: 7,
+  },
+  {
+    id: '8',
+    name: 'Policy Brief',
+    category: 'Karya Tulis',
+    description: 'Format padat & to-the-point, rangkuman analisis isu, serta rekomendasi solusi praktis.',
+    features: [
+      'Format Padat & To-The-Point',
+      'Rangkuman Analisis Isu',
+      'Rekomendasi Solusi Praktis',
+    ],
+    estimatedTime: '1 - 2 Hari / Kilat',
+    price: 'Mulai Rp 15.000',
+    icon: '📑',
+    imageUrl: null,
+    order: 8,
+  },
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [token, setToken] = useState('');
@@ -25,8 +156,11 @@ export default function AdminDashboard() {
 
   // Service form states
   const [serviceName, setServiceName] = useState('');
+  const [serviceCategory, setServiceCategory] = useState('Skripsi & Proposal');
   const [serviceDesc, setServiceDesc] = useState('');
   const [servicePrice, setServicePrice] = useState('');
+  const [serviceEstimatedTime, setServiceEstimatedTime] = useState('1 - 3 Hari');
+  const [serviceFeatures, setServiceFeatures] = useState<string[]>(['', '', '']);
   const [serviceIcon, setServiceIcon] = useState('📚');
   const [serviceImage, setServiceImage] = useState<File | null>(null);
   const [serviceImageUrl, setServiceImageUrl] = useState('');
@@ -87,18 +221,21 @@ export default function AdminDashboard() {
         if (lt) localTest = JSON.parse(lt);
       } catch {}
 
+      const officialServices = DEFAULT_OFFICIAL_SERVICES;
+
       if (isBlobActive) {
         // Blob aktif di Vercel: data server adalah single source of truth
-        setServices(servData);
+        const finalServ = (Array.isArray(servData) && servData.length >= 8) ? servData : officialServices;
+        setServices(finalServ);
         setTestimonials(testData);
         setConfig(confData);
         try {
-          localStorage.setItem('bryz_services', JSON.stringify(servData));
+          localStorage.setItem('bryz_services', JSON.stringify(finalServ));
           localStorage.setItem('bryz_testimonials', JSON.stringify(testData));
           localStorage.setItem('bryz_site_config', JSON.stringify(confData));
         } catch {}
       } else {
-        // Blob belum terhubung di Vercel: sinkronkan keterangan terbaru dari server & default sistem
+        // Sinkronkan keterangan & layanan resmi terbaru dari server & default sistem
         const defaultSkripsiFeatures = [
           'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
           'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
@@ -130,7 +267,9 @@ export default function AdminDashboard() {
           qrisImageUrl: localConf?.qrisImageUrl || confData.qrisImageUrl || null,
         };
 
-        const finalServices = (servData && servData.length > 0) ? servData : (localServ || []);
+        const finalServices = (Array.isArray(servData) && servData.length >= 8)
+          ? servData
+          : officialServices;
         const finalTestimonials = (testData && testData.length > 0) ? testData : (localTest || []);
 
         setServices(finalServices);
@@ -186,8 +325,11 @@ export default function AdminDashboard() {
   const openAddService = () => {
     setEditingService(null);
     setServiceName('');
+    setServiceCategory('Skripsi & Proposal');
     setServiceDesc('');
-    setServicePrice('Mulai Rp 500.000 / Konsultasi');
+    setServicePrice('Mulai Rp 50.000');
+    setServiceEstimatedTime('1 - 3 Hari (Bisa Kilat)');
+    setServiceFeatures(['', '', '']);
     setServiceIcon('📚');
     setServiceImage(null);
     setServiceImageUrl('');
@@ -197,8 +339,12 @@ export default function AdminDashboard() {
   const openEditService = (s: Service) => {
     setEditingService(s);
     setServiceName(s.name);
+    setServiceCategory(s.category || 'Skripsi & Proposal');
     setServiceDesc(s.description);
     setServicePrice(s.price);
+    setServiceEstimatedTime(s.estimatedTime || '1 - 3 Hari (Bisa Kilat)');
+    const existing = Array.isArray(s.features) ? s.features : [];
+    setServiceFeatures([existing[0] || '', existing[1] || '', existing[2] || '']);
     setServiceIcon(s.icon);
     setServiceImage(null);
     setServiceImageUrl(s.imageUrl || '');
@@ -218,6 +364,8 @@ export default function AdminDashboard() {
         imageUrl = await uploadFile(serviceImage);
       }
 
+      const cleanedFeatures = serviceFeatures.map((f) => f.trim()).filter(Boolean);
+
       if (editingService) {
         await fetch('/api/services', {
           method: 'PUT',
@@ -225,8 +373,11 @@ export default function AdminDashboard() {
           body: JSON.stringify({
             id: editingService.id,
             name: serviceName,
+            category: serviceCategory,
             description: serviceDesc,
             price: servicePrice,
+            estimatedTime: serviceEstimatedTime,
+            features: cleanedFeatures,
             icon: serviceIcon,
             imageUrl,
           }),
@@ -238,8 +389,11 @@ export default function AdminDashboard() {
           headers: authHeaders(),
           body: JSON.stringify({
             name: serviceName,
+            category: serviceCategory,
             description: serviceDesc,
             price: servicePrice,
+            estimatedTime: serviceEstimatedTime,
+            features: cleanedFeatures,
             icon: serviceIcon,
             imageUrl,
           }),
@@ -640,13 +794,39 @@ export default function AdminDashboard() {
                   Atur daftar layanan, harga awal, deskripsi, dan ikon yang tampil di Landing Page.
                 </p>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={openAddService}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                <span>Tambah Layanan Baru</span>
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={async () => {
+                    const officialServices = DEFAULT_OFFICIAL_SERVICES;
+                    setServices(officialServices);
+                    try { localStorage.setItem('bryz_services', JSON.stringify(officialServices)); } catch {}
+                    for (const s of officialServices) {
+                      await fetch('/api/services', {
+                        method: 'PUT',
+                        headers: authHeaders(),
+                        body: JSON.stringify(s),
+                      }).catch(() => {});
+                    }
+                    showToast('Layanan & Harga resmi berhasil disinkronkan!', 'success');
+                  }}
+                  title="Sinkronkan nama, harga, dan keterangan layanan dengan Daftar Harga Terbuka"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
+                  <span>Sinkronkan Layanan &amp; Harga</span>
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={openAddService}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Tambah Layanan Baru</span>
+                </button>
+              </div>
             </div>
 
             <div className="table-card">
@@ -654,9 +834,9 @@ export default function AdminDashboard() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '30%' }}>Layanan & Ikon</th>
-                      <th style={{ width: '36%' }}>Deskripsi Cakupan</th>
-                      <th style={{ width: '16%' }}>Harga Terpasang</th>
+                      <th style={{ width: '26%' }}>Layanan &amp; Kategori</th>
+                      <th style={{ width: '38%' }}>Fasilitas &amp; Keterangan</th>
+                      <th style={{ width: '18%' }}>Harga &amp; Waktu</th>
                       <th style={{ width: '8%' }}>Gambar</th>
                       <th style={{ width: '10%', textAlign: 'right' }}>Aksi</th>
                     </tr>
@@ -665,10 +845,10 @@ export default function AdminDashboard() {
                     {services.sort((a, b) => a.order - b.order).map((s) => (
                       <tr key={s.id}>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <div style={{
-                              width: '36px',
-                              height: '36px',
+                              width: '38px',
+                              height: '38px',
                               borderRadius: '8px',
                               background: 'var(--tag-bg)',
                               display: 'flex',
@@ -681,14 +861,36 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                               <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.94rem' }}>{s.name}</div>
-                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Urutan: #{s.order}</span>
+                              <span style={{
+                                display: 'inline-block',
+                                marginTop: '4px',
+                                padding: '2px 8px',
+                                background: 'var(--tag-bg)',
+                                color: 'var(--accent-primary)',
+                                borderRadius: '4px',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                              }}>
+                                {s.category || 'Skripsi & Proposal'}
+                              </span>
                             </div>
                           </div>
                         </td>
                         <td>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0, maxWidth: '400px' }}>
-                            {s.description}
-                          </p>
+                          {s.features && s.features.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '6px' }}>
+                              {s.features.map((feat, fIdx) => (
+                                <div key={fIdx} style={{ fontSize: '0.8rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.85rem' }}>✓</span>
+                                  <span>{feat}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                              {s.description}
+                            </p>
+                          )}
                         </td>
                         <td>
                           <span style={{
@@ -703,6 +905,12 @@ export default function AdminDashboard() {
                           }}>
                             {s.price}
                           </span>
+                          {s.estimatedTime && (
+                            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span>⏱️</span>
+                              <span>{s.estimatedTime}</span>
+                            </div>
+                          )}
                         </td>
                         <td>
                           {s.imageUrl ? (
@@ -1355,18 +1563,33 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Nama Layanan / Jenis Joki</label>
-              <input
-                type="text"
-                className="form-input"
-                value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
-                placeholder="Contoh: Bimbingan Skripsi Bab 1-5"
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Nama Layanan</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={serviceName}
+                  onChange={(e) => setServiceName(e.target.value)}
+                  placeholder="Contoh: Skripsi / Makalah Akademik"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Kategori Layanan</label>
+                <select
+                  className="form-input"
+                  value={serviceCategory}
+                  onChange={(e) => setServiceCategory(e.target.value)}
+                >
+                  <option value="Skripsi & Proposal">Skripsi & Proposal</option>
+                  <option value="Publikasi Ilmiah">Publikasi Ilmiah</option>
+                  <option value="Karya Tulis">Karya Tulis</option>
+                  <option value="Tugas Teknik">Tugas Teknik</option>
+                </select>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '14px' }}>
               <div className="form-group">
                 <label className="form-label">Estimasi Harga Tampilan</label>
                 <input
@@ -1374,25 +1597,59 @@ export default function AdminDashboard() {
                   className="form-input"
                   value={servicePrice}
                   onChange={(e) => setServicePrice(e.target.value)}
-                  placeholder="Mulai Rp 500.000 / Konsultasi"
+                  placeholder="Mulai Rp 500.000 / Bab"
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Simbol Ikon (Emoji)</label>
+                <label className="form-label">Estimasi Waktu Pengerjaan</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={serviceEstimatedTime}
+                  onChange={(e) => setServiceEstimatedTime(e.target.value)}
+                  placeholder="5 - 14 Hari (Fleksibel)"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Emoji Ikon</label>
                 <input
                   type="text"
                   className="form-input"
                   value={serviceIcon}
                   onChange={(e) => setServiceIcon(e.target.value)}
                   placeholder="📚"
+                  style={{ textAlign: 'center', fontSize: '1.2rem' }}
                 />
               </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
+              <label className="form-label" style={{ marginBottom: '8px' }}>
+                Fasilitas &amp; Standar Kualitas (3 Poin Checklist)
+              </label>
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: idx === 2 ? 0 : '8px' }}>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.9rem' }}>✓</span>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={serviceFeatures[idx] || ''}
+                    onChange={(e) => {
+                      const updated = [...serviceFeatures];
+                      updated[idx] = e.target.value;
+                      setServiceFeatures(updated);
+                    }}
+                    placeholder={idx === 0 ? 'Garansi revisi sampai ACC' : idx === 1 ? 'Lolos cek Turnitin < 15%' : 'Bimbingan & Olah Data'}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="form-group">
               <label className="form-label">Deskripsi Lengkap Cakupan Layanan</label>
               <textarea
                 className="form-textarea"
+                rows={2}
                 value={serviceDesc}
                 onChange={(e) => setServiceDesc(e.target.value)}
                 placeholder="Jelaskan ruang lingkup pengerjaan, software yang dipakai, atau jaminan revisi..."

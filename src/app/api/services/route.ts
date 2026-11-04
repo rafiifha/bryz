@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, description, price, icon, imageUrl } = body;
+    const { name, description, price, icon, imageUrl, category, features, estimatedTime } = body;
 
     if (!name || !description) {
       return NextResponse.json({ error: 'Nama dan deskripsi wajib diisi' }, { status: 400 });
@@ -25,6 +25,9 @@ export async function POST(request: Request) {
       price: price || 'Hubungi Admin',
       icon: icon || '📄',
       imageUrl: imageUrl || null,
+      category,
+      features,
+      estimatedTime,
     });
 
     revalidatePath('/');
