@@ -307,7 +307,7 @@ export default function LandingPage({
             </h1>
             
             <p className="hero-description">
-              {config.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.'}
+              {config.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.'}
             </p>
 
             <div className="hero-buttons">
@@ -329,10 +329,10 @@ export default function LandingPage({
                 <span>• Konsultasi Gratis</span>
               </span>
               <span className="reassurance-item">
-                <span>• Admin Fast Response</span>
+                <span>• Identitas &amp; Data 100% Aman</span>
               </span>
               <span className="reassurance-item">
-                <span>• Identitas &amp; Data 100% Aman</span>
+                <span>• Admin Fast Response</span>
               </span>
             </div>
           </div>
@@ -355,13 +355,13 @@ export default function LandingPage({
             <div className="hero-highlight-card">
               <div className="highlight-icon-box">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
                 </svg>
               </div>
               <div className="highlight-body">
-                <h3 className="highlight-title">Rujukan Kredibel &amp; Terkini</h3>
-                <p className="highlight-desc">Didukung buku referensi dan jurnal ilmiah terbaru, lengkap dengan daftar pustaka yang rapi.</p>
+                <h3 className="highlight-title">Fresh Graduate PTN Top 3</h3>
+                <p className="highlight-desc">Dikerjakan langsung oleh lulusan fresh graduate PTN top 3 dengan rujukan ilmiah kredibel dan terstandar.</p>
               </div>
             </div>
 
@@ -372,7 +372,7 @@ export default function LandingPage({
                 </svg>
               </div>
               <div className="highlight-body">
-                <h3 className="highlight-title">Garansi Revisi Sampai Tuntas</h3>
+                <h3 className="highlight-title">Garansi Revisi</h3>
                 <p className="highlight-desc">Ada catatan revisi? Langsung dibantu perbaiki sampai tuntas tanpa biaya tambahan.</p>
               </div>
             </div>

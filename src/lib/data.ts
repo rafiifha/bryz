@@ -124,7 +124,7 @@ export const defaultConfig: SiteConfig = {
   whatsappNumber: '6285861950414',
   heroEyebrow: 'Bimbingan & Bantu Tugas Akademik Terpercaya',
   heroTitle: 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
-  heroDescription: 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
+  heroDescription: 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
   totalClients: '100+',
   totalProjects: '100+',
   satisfaction: '100%',
