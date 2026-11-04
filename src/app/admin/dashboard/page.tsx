@@ -127,6 +127,17 @@ export default function AdminDashboard() {
     fetchData();
   }, [router, fetchData]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowServiceModal(false);
+        setShowTestimonialModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const uploadFile = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
@@ -384,10 +395,10 @@ export default function AdminDashboard() {
         {/* Sidebar Nav */}
         <ul className="admin-nav">
           <li>
-            <a
-              href="#"
+            <button
+              type="button"
               className={activeTab === 'services' ? 'active' : ''}
-              onClick={(e) => { e.preventDefault(); setActiveTab('services'); }}
+              onClick={() => setActiveTab('services')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -396,17 +407,17 @@ export default function AdminDashboard() {
                 <line x1="16" y1="17" x2="8" y2="17" />
                 <polyline points="10 9 9 9 8 9" />
               </svg>
-              <span>Layanan & Joki</span>
+              <span>Layanan &amp; Joki</span>
               <span style={{ marginLeft: 'auto', fontSize: '0.74rem', background: 'var(--tag-bg)', color: 'var(--tag-text)', padding: '2px 7px', borderRadius: '4px', fontWeight: 600 }}>
                 {services.length}
               </span>
-            </a>
+            </button>
           </li>
           <li>
-            <a
-              href="#"
+            <button
+              type="button"
               className={activeTab === 'testimonials' ? 'active' : ''}
-              onClick={(e) => { e.preventDefault(); setActiveTab('testimonials'); }}
+              onClick={() => setActiveTab('testimonials')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -417,20 +428,20 @@ export default function AdminDashboard() {
               <span style={{ marginLeft: 'auto', fontSize: '0.74rem', background: 'var(--tag-bg)', color: 'var(--tag-text)', padding: '2px 7px', borderRadius: '4px', fontWeight: 600 }}>
                 {testimonials.length}
               </span>
-            </a>
+            </button>
           </li>
           <li>
-            <a
-              href="#"
+            <button
+              type="button"
               className={activeTab === 'settings' ? 'active' : ''}
-              onClick={(e) => { e.preventDefault(); setActiveTab('settings'); }}
+              onClick={() => setActiveTab('settings')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-              <span>Pengaturan & WA</span>
-            </a>
+              <span>Pengaturan &amp; WA</span>
+            </button>
           </li>
 
           {/* Quick Links */}
@@ -439,7 +450,7 @@ export default function AdminDashboard() {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" />
               </svg>
               <span>Lihat Website</span>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
@@ -450,14 +461,14 @@ export default function AdminDashboard() {
             </a>
           </li>
           <li>
-            <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }} style={{ color: 'var(--danger)' }}>
+            <button type="button" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
               <span>Keluar (Logout)</span>
-            </a>
+            </button>
           </li>
         </ul>
       </aside>
@@ -1021,6 +1032,16 @@ export default function AdminDashboard() {
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', marginBottom: '24px', boxShadow: 'var(--shadow-xs)' }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '16px' }}>Konten Headline Utama (Hero Section)</h3>
               <div className="form-group">
+                <label className="form-label">Badge / Eyebrow di Atas Judul</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={config.heroEyebrow || ''}
+                  onChange={(e) => setConfig({ ...config, heroEyebrow: e.target.value })}
+                  placeholder="Bimbingan & Bantu Tugas Akademik Terpercaya"
+                />
+              </div>
+              <div className="form-group">
                 <label className="form-label">Judul Utama Hero</label>
                 <input
                   type="text"
@@ -1039,8 +1060,161 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Skripsi Deliverables Features Card */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', marginBottom: '24px', boxShadow: 'var(--shadow-xs)' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}>Poin Keunggulan Layanan Skripsi (Kartu Utama)</h3>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                3 poin checklist fasilitas yang tampil di dalam kartu unggulan Skripsi.
+              </p>
+              {[0, 1, 2].map((idx) => {
+                const feats = (config.skripsiFeatures && config.skripsiFeatures.length > 0)
+                  ? config.skripsiFeatures
+                  : [
+                      'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
+                      'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
+                      'Sudah termasuk cek Turnitin aman dan gratis revisi sampai ACC',
+                    ];
+                return (
+                  <div className="form-group" key={idx} style={{ marginBottom: idx === 2 ? 0 : '14px' }}>
+                    <label className="form-label">Poin Keunggulan #{idx + 1}</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={feats[idx] || ''}
+                      onChange={(e) => {
+                        const newFeats = [...feats];
+                        newFeats[idx] = e.target.value;
+                        setConfig({ ...config, skripsiFeatures: newFeats });
+                      }}
+                      placeholder={`Poin keunggulan ${idx + 1}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* FAQ Manager Card */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', marginBottom: '24px', boxShadow: 'var(--shadow-xs)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Pertanyaan yang Sering Diajukan (FAQ)</h3>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                    Kelola daftar tanya-jawab yang tampil di bagian FAQ website.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    const currentFaqs = config.faqs && config.faqs.length > 0
+                      ? config.faqs
+                      : [
+                          { q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?', a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun.' },
+                          { q: 'Bagaimana jika ada catatan revisi?', a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.' },
+                          { q: 'Apakah tugas dicek dengan Turnitin resmi?', a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository.' },
+                          { q: 'Berapa lama estimasi pengerjaannya?', a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu.' },
+                          { q: 'Bagaimana sistem pembayarannya?', a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.' },
+                        ];
+                    setConfig({
+                      ...config,
+                      faqs: [...currentFaqs, { q: '', a: '' }],
+                    });
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Tambah Pertanyaan FAQ</span>
+                </button>
+              </div>
+
+              {(!config.faqs || config.faqs.length === 0) ? (
+                <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px dashed var(--border-color)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    Saat ini menggunakan 5 FAQ default sistem yang ramah dan manusiawi.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      const defaultFaqs = [
+                        { q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?', a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun. Privasi Anda aman bersama kami.' },
+                        { q: 'Bagaimana jika ada catatan revisi?', a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.' },
+                        { q: 'Apakah tugas dicek dengan Turnitin resmi?', a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository (bebas plagiasi dan tidak tersimpan di database publik).' },
+                        { q: 'Berapa lama estimasi pengerjaannya?', a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu, atau bisa pengerjaan terjadwal bertahap.' },
+                        { q: 'Bagaimana sistem pembayarannya?', a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.' },
+                      ];
+                      setConfig({ ...config, faqs: defaultFaqs });
+                    }}
+                  >
+                    Muat Daftar FAQ Default untuk Diedit
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {config.faqs.map((faqItem, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '16px',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '10px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                          Pertanyaan #{idx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                          onClick={() => {
+                            const newFaqs = config.faqs!.filter((_, i) => i !== idx);
+                            setConfig({ ...config, faqs: newFaqs });
+                          }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '10px' }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Pertanyaan</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={faqItem.q}
+                          onChange={(e) => {
+                            const newFaqs = [...config.faqs!];
+                            newFaqs[idx] = { ...newFaqs[idx], q: e.target.value };
+                            setConfig({ ...config, faqs: newFaqs });
+                          }}
+                          placeholder="Tulis pertanyaan..."
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Jawaban</label>
+                        <textarea
+                          className="form-textarea"
+                          rows={2}
+                          value={faqItem.a}
+                          onChange={(e) => {
+                            const newFaqs = [...config.faqs!];
+                            newFaqs[idx] = { ...newFaqs[idx], a: e.target.value };
+                            setConfig({ ...config, faqs: newFaqs });
+                          }}
+                          placeholder="Tulis jawaban penjelasan..."
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Stats Metrics Card */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', boxShadow: 'var(--shadow-xs)' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '24px', marginBottom: '24px', boxShadow: 'var(--shadow-xs)' }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '16px' }}>Statistik Kinerja yang Ditampilkan</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1072,6 +1246,24 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Bottom Save Action Bar */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '32px' }}>
+              <button className="btn btn-primary btn-lg" onClick={saveSettings} disabled={saving}>
+                {saving ? (
+                  <span>Menyimpan Pengaturan...</span>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                      <polyline points="17 21 17 13 7 13 7 21" />
+                      <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    <span>Simpan Semua Pengaturan Website</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </main>
@@ -1085,8 +1277,10 @@ export default function AdminDashboard() {
                 {editingService ? 'Edit Data Layanan' : 'Tambah Layanan Akademik Baru'}
               </h2>
               <button
+                type="button"
                 onClick={() => setShowServiceModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
+                aria-label="Tutup modal layanan"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '4px' }}
               >
                 ✕
               </button>
@@ -1177,8 +1371,10 @@ export default function AdminDashboard() {
                 Unggah Screenshot Testimoni Baru
               </h2>
               <button
+                type="button"
                 onClick={() => setShowTestimonialModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
+                aria-label="Tutup modal testimoni"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '4px' }}
               >
                 ✕
               </button>

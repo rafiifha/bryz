@@ -18,8 +18,8 @@ export const defaultServices: Service[] = [
   {
     id: '1',
     name: 'Skripsi',
-    description: 'Bimbingan dan pengerjaan skripsi lengkap dari Bab 1 hingga Bab 5. Termasuk olah data SPSS/PLS/Python, parafrase anti-plagiarisme, hingga bebas revisi sampai ACC sidang.',
-    price: 'Mulai Rp 1.500.000 / Konsultasi',
+    description: 'Bantu pengerjaan skripsi dari awal atau lanjutin bab yang macet. Bisa bayar nyicil per bab, dibantu olah data dan revisian sampai beres siap sidang.',
+    price: 'Mulai Rp 500.000 / Bab',
     icon: '📚',
     imageUrl: null,
     order: 1,
@@ -27,8 +27,8 @@ export const defaultServices: Service[] = [
   {
     id: '2',
     name: 'Proposal Skripsi',
-    description: 'Penyusunan proposal skripsi terstruktur sesuai buku pedoman kampus. Mulai dari latar belakang masalah, identifikasi masalah, kajian teori, hingga metodologi penelitian komprehensif.',
-    price: 'Mulai Rp 500.000 / Konsultasi',
+    description: 'Bantu susun proposal dari ide judul, latar belakang, teori, sampai metode penelitian yang pas dan gampang dipahami.',
+    price: 'Mulai Rp 100.000',
     icon: '📋',
     imageUrl: null,
     order: 2,
@@ -36,8 +36,8 @@ export const defaultServices: Service[] = [
   {
     id: '3',
     name: 'Artikel Ilmiah & Jurnal',
-    description: 'Penulisan artikel ilmiah standar jurnal nasional terakreditasi (SINTA 1 - 6) hingga internasional (Scopus/WoS). Format IMRAD lengkap dengan sitasi Mendeley / Zotero.',
-    price: 'Mulai Rp 450.000 / Konsultasi',
+    description: 'Bantu tulis dan rapihkan artikel ilmiah siap submit jurnal nasional atau internasional, lengkap dengan sitasi yang rapi.',
+    price: 'Mulai Rp 100.000',
     icon: '📰',
     imageUrl: null,
     order: 3,
@@ -45,8 +45,8 @@ export const defaultServices: Service[] = [
   {
     id: '4',
     name: 'Makalah Akademik',
-    description: 'Pembuatan makalah mata kuliah dengan argumentasi mendalam, analisis kritis, dan referensi jurnal terkini (maks 5 tahun terakhir). Rapi, cepat, dan siap presentasi.',
-    price: 'Mulai Rp 100.000 / Konsultasi',
+    description: 'Bantu buatin makalah tugas sekolah atau kuliah dengan susunan rapi, materi jelas, dan referensi yang tepercaya.',
+    price: 'Mulai Rp 50.000',
     icon: '📝',
     imageUrl: null,
     order: 4,
@@ -54,8 +54,8 @@ export const defaultServices: Service[] = [
   {
     id: '5',
     name: 'Esai & Opini',
-    description: 'Penulisan esai beasiswa (LPDP, AAS, IISMA), esai lomba, hingga esai tugas kuliah. Diksi persuasif, terstruktur, orisinil, dan memikat pembaca.',
-    price: 'Mulai Rp 75.000 / Konsultasi',
+    description: 'Penulisan esai tugas, lomba, atau beasiswa dengan gaya bahasa yang enak dibaca, mengalir, dan punya argumen kuat.',
+    price: 'Mulai Rp 50.000',
     icon: '✍️',
     imageUrl: null,
     order: 5,
@@ -63,8 +63,8 @@ export const defaultServices: Service[] = [
   {
     id: '6',
     name: 'Paper & Review Jurnal',
-    description: 'Pembuatan scientific paper, critical appraisal, dan literature review multi-jurnal. Pembahasan tajam dan metodologis dengan referensi terindeks bereputasi.',
-    price: 'Mulai Rp 200.000 / Konsultasi',
+    description: 'Bantu bedah dan rangkum beberapa jurnal ilmiah jadi satu ulasan yang padat, jelas, dan nyambung dengan topikmu.',
+    price: 'Mulai Rp 50.000',
     icon: '🔬',
     imageUrl: null,
     order: 6,
@@ -72,25 +72,91 @@ export const defaultServices: Service[] = [
   {
     id: '7',
     name: 'Tugas Teknik (Engineering)',
-    description: 'Pengerjaan tugas teknik spesifik: Teknik Informatika/Sistem Informasi (Coding, Web, App), Teknik Sipil & Mesin (AutoCAD, SAP2000, Analisis Struktur), serta Teknik Elektro (MATLAB, IoT).',
-    price: 'Mulai Rp 150.000 / Sesuai Kerumitan',
+    description: 'Bantu ngerjain tugas hitungan teknik, coding/web, gambar CAD, atau laporan praktikum dengan penjelasan yang jelas.',
+    price: 'Mulai Rp 100.000',
     icon: '⚙️',
     imageUrl: null,
     order: 7,
   },
+  {
+    id: '8',
+    name: 'Policy Brief',
+    description: 'Bantu bikin ringkasan kebijakan yang ringkas dan padat. Isinya masalah utama, data pendukung, dan saran solusi yang to-the-point.',
+    price: 'Mulai Rp 15.000',
+    icon: '📑',
+    imageUrl: null,
+    order: 8,
+  },
 ];
 
-export const defaultTestimonials: Testimonial[] = [];
+export const defaultTestimonials: Testimonial[] = [
+  {
+    id: '1',
+    name: 'Skripsi Bab 1-5 & Olah Data (ACC Sidang)',
+    imageUrl: '/uploads/1793371889528-17jpd6.jpeg',
+    rating: 5,
+    order: 1,
+  },
+  {
+    id: '2',
+    name: 'Proposal Skripsi & Metodologi (Lolos Seminar)',
+    imageUrl: '/uploads/1793372785946-kpovb6.jpeg',
+    rating: 5,
+    order: 2,
+  },
+  {
+    id: '3',
+    name: 'Artikel Jurnal SINTA 2 (Terbit & Bebas Revisi)',
+    imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+    rating: 5,
+    order: 3,
+  },
+  {
+    id: '4',
+    name: 'Tugas Teknik: Coding & Analisis Struktur (Nilai A)',
+    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80',
+    rating: 5,
+    order: 4,
+  },
+];
 
 export const defaultConfig: SiteConfig = {
-  whatsappNumber: '6281234567890',
-  heroTitle: 'Solusi Akademik Cepat & Berkualitas untuk Masa Depanmu',
-  heroDescription: 'Bryz Academic Support siap mendampingi perjalanan akademikmu mulai dari tugas harian, esai, paper, jurnal, tugas teknik hingga skripsi tuntas bergaransi.',
-  totalClients: '1.250+',
-  totalProjects: '3.400+',
-  satisfaction: '99.4%',
+  whatsappNumber: '6285861950414',
+  heroEyebrow: 'Bimbingan & Bantu Tugas Akademik Terpercaya',
+  heroTitle: 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
+  heroDescription: 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
+  totalClients: '100+',
+  totalProjects: '100+',
+  satisfaction: '100%',
   qrisImageUrl: null,
   logoImageUrl: null,
+  skripsiFeatures: [
+    'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
+    'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
+    'Sudah termasuk cek Turnitin aman dan gratis revisi sampai ACC',
+  ],
+  faqs: [
+    {
+      q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?',
+      a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun. Privasi Anda aman bersama kami.',
+    },
+    {
+      q: 'Bagaimana jika ada catatan revisi?',
+      a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.',
+    },
+    {
+      q: 'Apakah tugas dicek dengan Turnitin resmi?',
+      a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository (bebas plagiasi dan tidak tersimpan di database publik).',
+    },
+    {
+      q: 'Berapa lama estimasi pengerjaannya?',
+      a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu, atau bisa pengerjaan terjadwal bertahap.',
+    },
+    {
+      q: 'Bagaimana sistem pembayarannya?',
+      a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.',
+    },
+  ],
 };
 
 function ensureDataDir() {

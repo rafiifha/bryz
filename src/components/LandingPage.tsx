@@ -32,6 +32,19 @@ export default function LandingPage({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Aksesibilitas (Antislop R-32): Tutup modal dan menu mobile dengan tombol Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowQrisModal(false);
+        setPreviewImage(null);
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Sinkronisasi data real-time dengan Admin
   useEffect(() => {
     let hasLocalConfig = false;
@@ -47,8 +60,13 @@ export default function LandingPage({
       }
       const localTest = localStorage.getItem('bryz_testimonials');
       if (localTest) {
-        setTestimonials(JSON.parse(localTest));
-        hasLocalTestimonials = true;
+        try {
+          const parsed = JSON.parse(localTest);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTestimonials(parsed);
+            hasLocalTestimonials = true;
+          }
+        } catch {}
       }
       const localServ = localStorage.getItem('bryz_services');
       if (localServ) {
@@ -70,7 +88,7 @@ export default function LandingPage({
         if (Array.isArray(s) && (isBlobActive || !hasLocalServices)) {
           setServices(s);
         }
-        if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials)) {
+        if (Array.isArray(t) && (isBlobActive || !hasLocalTestimonials || t.length > 0)) {
           setTestimonials(t);
         }
         if (c && typeof c === 'object') {
@@ -103,7 +121,7 @@ export default function LandingPage({
     const lower = name.toLowerCase();
     if (lower.includes('skripsi') || lower.includes('proposal')) return 'Skripsi & Proposal';
     if (lower.includes('artikel') || lower.includes('jurnal')) return 'Publikasi Ilmiah';
-    if (lower.includes('makalah') || lower.includes('esai') || lower.includes('paper')) return 'Karya Tulis';
+    if (lower.includes('makalah') || lower.includes('esai') || lower.includes('paper') || lower.includes('policy') || lower.includes('brief')) return 'Karya Tulis';
     if (lower.includes('teknik') || lower.includes('coding')) return 'Tugas Teknik';
     return 'Akademik';
   };
@@ -114,6 +132,7 @@ export default function LandingPage({
     if (lower.includes('proposal')) return '3 - 7 Hari';
     if (lower.includes('artikel') || lower.includes('jurnal')) return '3 - 5 Hari';
     if (lower.includes('teknik')) return '2 - 5 Hari / Kilat';
+    if (lower.includes('policy') || lower.includes('brief')) return '1 - 2 Hari / Kilat';
     return '1 - 3 Hari (Bisa Kilat)';
   };
 
@@ -123,10 +142,13 @@ export default function LandingPage({
       return ['Garansi revisi sampai ACC', 'Lolos cek Turnitin < 15%', 'Bimbingan & Olah Data'];
     }
     if (lower.includes('artikel') || lower.includes('jurnal')) {
-      return ['Format IMRAD Jurnal SINTA', 'Sitasi Mendeley / Zotero', 'Bebas Plagiasi'];
+      return ['Format Standar Jurnal / SINTA', 'Sitasi Mendeley / Zotero', 'Bebas Plagiasi'];
     }
     if (lower.includes('teknik')) {
       return ['Kode/Perhitungan Terverifikasi', 'Source code & Dokumentasi', 'Testing & Konsultasi'];
+    }
+    if (lower.includes('policy') || lower.includes('brief')) {
+      return ['Format Padat & To-The-Point', 'Rangkuman Analisis Isu', 'Rekomendasi Solusi Praktis'];
     }
     return ['Bebas Plagiarisme', 'Referensi Jurnal Terkini', 'Garansi Revisi Gratis'];
   };
@@ -134,54 +156,74 @@ export default function LandingPage({
   const filteredServices = services.filter((service) => {
     if (selectedCategory === 'all') return true;
     if (selectedCategory === 'skripsi') return service.name.toLowerCase().includes('skripsi') || service.name.toLowerCase().includes('proposal');
-    if (selectedCategory === 'ilmiah') return service.name.toLowerCase().includes('artikel') || service.name.toLowerCase().includes('jurnal') || service.name.toLowerCase().includes('makalah') || service.name.toLowerCase().includes('esai') || service.name.toLowerCase().includes('paper');
+    if (selectedCategory === 'ilmiah') return service.name.toLowerCase().includes('artikel') || service.name.toLowerCase().includes('jurnal') || service.name.toLowerCase().includes('makalah') || service.name.toLowerCase().includes('esai') || service.name.toLowerCase().includes('paper') || service.name.toLowerCase().includes('policy') || service.name.toLowerCase().includes('brief');
     if (selectedCategory === 'teknik') return service.name.toLowerCase().includes('teknik') || service.name.toLowerCase().includes('coding') || service.name.toLowerCase().includes('cad');
     return true;
   });
 
+  const activeTestimonials = (testimonials && testimonials.length > 0)
+    ? testimonials
+    : (initialTestimonials && initialTestimonials.length > 0)
+    ? initialTestimonials
+    : [];
+
   const faqs = [
     {
       q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?',
-      a: '100% Terjamin Rahasia. Kami tidak pernah membagikan identitas nama, kampus, maupun dokumen pengerjaan ke pihak ketiga demi menjaga privasi dan reputasi akademik Anda.',
+      a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun. Privasi Anda aman bersama kami.',
     },
     {
-      q: 'Bagaimana jika dosen saya memberikan catatan revisi?',
-      a: 'Kami memberikan garansi revisi gratis tanpa biaya tambahan sampai tugas Anda disetujui dosen, sesuai dengan kesepakatan topik dan panduan di awal.',
+      q: 'Bagaimana jika ada catatan revisi?',
+      a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.',
     },
     {
       q: 'Apakah tugas dicek dengan Turnitin resmi?',
-      a: 'Ya, seluruh dokumen karya tulis kami kerjakan dengan teknik parafrase human-written berkualitas tinggi dan kami sertakan bukti lolos uji Turnitin standar kampus.',
+      a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository (bebas plagiasi dan tidak tersimpan di database publik).',
     },
     {
       q: 'Berapa lama estimasi pengerjaannya?',
-      a: 'Waktu pengerjaan disesuaikan dengan kebutuhan Anda. Kami melayani kebutuhan kilat (24 - 48 jam) untuk tugas mendesak, hingga pengerjaan terjadwal bertahap untuk bab skripsi.',
+      a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu, atau bisa pengerjaan terjadwal bertahap.',
     },
     {
       q: 'Bagaimana sistem pembayarannya?',
-      a: 'Transparan dan aman: Cukup DP 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan bukti progres kami perlihatkan.',
+      a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.',
     },
   ];
+
+  const activeFaqs = (config.faqs && config.faqs.length > 0)
+    ? config.faqs
+    : faqs;
+
+  const defaultSkripsiFeatures = [
+    'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
+    'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
+    'Sudah termasuk cek Turnitin aman dan gratis revisi sampai ACC',
+  ];
+
+  const activeSkripsiFeatures = (config.skripsiFeatures && config.skripsiFeatures.length > 0)
+    ? config.skripsiFeatures
+    : defaultSkripsiFeatures;
 
   const steps = [
     {
       num: '01',
-      title: 'Konsultasi & Kirim Detail',
-      desc: 'Hubungi WhatsApp admin kami, kirimkan judul tugas, buku panduan kampus, dan deadline Anda.',
+      title: 'Chat Admin & Kirim Bahan',
+      desc: 'Hubungi WhatsApp admin kami, kirimkan detail tugas, panduan/ketentuan, dan info deadline Anda.',
     },
     {
       num: '02',
-      title: 'Estimasi & Kesepakatan',
-      desc: 'Admin memberikan estimasi biaya transparan dan jadwal pengerjaan yang disepakati bersama.',
+      title: 'Cek Biaya & Kesepakatan',
+      desc: 'Admin berikan perkiraan biaya yang jelas dan jadwal pengerjaan sesuai kesepakatan bersama.',
     },
     {
       num: '03',
-      title: 'Pengerjaan oleh Tim Ahli',
-      desc: 'Tugas diproses secara profesional oleh tim spesialis sesuai rumpun bidang studi Anda.',
+      title: 'Proses Pengerjaan Tugas',
+      desc: 'Tugas dikerjakan dengan teliti oleh tim sesuai bidang dan jenjang pendidikan Anda dengan rujukan yang tepat.',
     },
     {
       num: '04',
-      title: 'Serah Terima & Garansi ACC',
-      desc: 'File diserahkan rapi beserta laporan Turnitin. Tim siap mendampingi revisi sampai tuntas.',
+      title: 'Hasil Selesai & Garansi Revisi',
+      desc: 'File diserahkan rapi beserta hasil cek Turnitin (jika dibutuhkan). Ada catatan revisi? Langsung kami bantu bereskan.',
     },
   ];
 
@@ -190,7 +232,7 @@ export default function LandingPage({
       {/* ===================== NAVBAR ===================== */}
       <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
         <div className="container navbar-inner">
-          <a href="#" className="navbar-logo">
+          <a href="/" className="navbar-logo">
             {config.logoImageUrl ? (
               <img
                 src={config.logoImageUrl}
@@ -215,8 +257,9 @@ export default function LandingPage({
           <nav>
             <ul className={`navbar-nav ${mobileMenuOpen ? 'open' : ''}`}>
               <li><a href="#layanan" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Layanan</a></li>
-              <li><a href="#pricelist" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Pricelist</a></li>
               <li><a href="#keunggulan" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Keunggulan</a></li>
+              <li><a href="#pricelist" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Pricelist</a></li>
+              <li><a href="#alur" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Alur Kerja</a></li>
               <li><a href="#testimoni" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>Testimoni</a></li>
               <li><a href="#faq" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>FAQ</a></li>
             </ul>
@@ -241,7 +284,8 @@ export default function LandingPage({
             <button
               className="mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Menu"
+              aria-label="Buka navigasi menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? '✕' : '☰'}
             </button>
@@ -249,98 +293,278 @@ export default function LandingPage({
         </div>
       </header>
 
-      {/* ===================== HERO SECTION ===================== */}
-      <section className="hero" id="hero">
-        <div className="hero-bg-orb hero-bg-orb-1" />
-        <div className="hero-bg-orb hero-bg-orb-2" />
-        <div className="container">
-          <div className="hero-content">
-            <div className="hero-badge">
-              <span className="hero-badge-dot" />
-              <span>Bimbingan & Pengerjaan Akademik Terpercaya</span>
+      {/* ===================== HERO SECTION (Clean & Modern - DESIGN.md §7) ===================== */}
+      <section className="hero-editorial section-ivory" id="hero">
+        <div className="container hero-container-clean">
+          <div className="hero-header-content">
+            <div className="hero-eyebrow">
+              <span className="hero-eyebrow-dot" />
+              <span>{config.heroEyebrow || 'Bimbingan & Bantu Tugas Akademik Terpercaya'}</span>
             </div>
+            
             <h1 className="hero-title">
-              Raih Nilai Terbaik Bersama <span className="hero-title-highlight">Bryz Academic</span>
+              {config.heroTitle || 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas'}
             </h1>
+            
             <p className="hero-description">
-              Solusi bantuan akademik terpadu untuk skripsi, proposal, artikel ilmiah, makalah, esai, paper, hingga tugas teknik. Cepat, orisinil, bebas plagiarisme, dan bergaransi sampai ACC.
+              {config.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.'}
             </p>
+
             <div className="hero-buttons">
               <a href={defaultWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                 </svg>
                 <span>Konsultasi Gratis via WhatsApp</span>
               </a>
-              <a href="#pricelist" className="btn btn-secondary btn-lg">
+              <a href="#pricelist" className="btn btn-editorial-outline btn-lg">
                 <span>Cek Daftar Harga</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
               </a>
             </div>
 
-            {/* Metric Stats */}
-            <div className="hero-stats">
-              <div className="hero-stat">
-                <div className="hero-stat-number">{config.totalClients}</div>
-                <div className="hero-stat-label">Mahasiswa Terbantu</div>
+            {/* Reassurance Meta Bar */}
+            <div className="hero-reassurance">
+              <span className="reassurance-item">
+                <span className="reassurance" />
+                <span>• Konsultasi Gratis</span>
+              </span>
+              <span className="reassurance-item">
+                <span>• Admin Fast Response</span>
+              </span>
+              <span className="reassurance-item">
+                <span>• Identitas &amp; Data 100% Aman</span>
+              </span>
+            </div>
+          </div>
+
+          {/* 4 Clean Value Highlight Cards */}
+          <div className="hero-highlights-grid">
+            <div className="hero-highlight-card">
+              <div className="highlight-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <polyline points="9 12 11 14 15 10" />
+                </svg>
               </div>
-              <div className="hero-stat">
-                <div className="hero-stat-number">{config.totalProjects}</div>
-                <div className="hero-stat-label">Tugas Terselesaikan</div>
+              <div className="highlight-body">
+                <h3 className="highlight-title">Bebas Plagiasi (Turnitin Aman)</h3>
+                <p className="highlight-desc">Pengecekan resmi Turnitin no-repository, berkas Anda aman dan tidak tersimpan di database.</p>
               </div>
-              <div className="hero-stat">
-                <div className="hero-stat-number">{config.satisfaction}</div>
-                <div className="hero-stat-label">Tingkat Kepuasan ACC</div>
+            </div>
+
+            <div className="hero-highlight-card">
+              <div className="highlight-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </div>
+              <div className="highlight-body">
+                <h3 className="highlight-title">Rujukan Kredibel &amp; Terkini</h3>
+                <p className="highlight-desc">Didukung buku referensi dan jurnal ilmiah terbaru, lengkap dengan daftar pustaka yang rapi.</p>
+              </div>
+            </div>
+
+            <div className="hero-highlight-card">
+              <div className="highlight-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l6 6" />
+                </svg>
+              </div>
+              <div className="highlight-body">
+                <h3 className="highlight-title">Garansi Revisi Sampai Tuntas</h3>
+                <p className="highlight-desc">Ada catatan revisi? Langsung dibantu perbaiki sampai tuntas tanpa biaya tambahan.</p>
+              </div>
+            </div>
+
+            <div className="hero-highlight-card">
+              <div className="highlight-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div className="highlight-body">
+                <h3 className="highlight-title">Bisa Kilat &amp; Tepat Waktu</h3>
+                <p className="highlight-desc">Deadline mepet? Tersedia opsi pengerjaan kilat 24–48 jam dengan hasil tetap rapi.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===================== SERVICES SECTION ===================== */}
-      <section className="section" id="layanan">
+      {/* ===================== SERVICES SECTION (Paper - Editorial Asymmetric Grid) ===================== */}
+      <section className="section section-paper" id="layanan">
         <div className="container">
-          <h2 className="section-title">Layanan Bantuan Akademik</h2>
+          <h2 className="section-title">Pilihan Layanan Kami</h2>
           <p className="section-subtitle">
-            Dikerjakan oleh tim profesional lulusan universitas terkemuka sesuai bidang keilmuan Anda.
+            Dikerjakan langsung oleh tim berpengalaman sesuai jenjang pendidikan dan kebutuhan tugas Anda.
           </p>
 
-          <div className="services-grid">
-            {services.sort((a, b) => a.order - b.order).map((service) => (
-              <div key={service.id} className="service-card">
-                <div>
-                  <div className="service-icon-box">{service.icon}</div>
-                  <h3 className="service-title">{service.name}</h3>
-                  <p className="service-description">{service.description}</p>
-                </div>
-                <div className="service-footer">
-                  <div className="service-price-pill">{service.price}</div>
-                  <a
-                    href={getWaLink(service.name)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-secondary btn-sm"
-                  >
-                    <span>Pesan</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            ))}
+          <div className="services-editorial-grid">
+            {/* Featured Master Service: First Item */}
+            {services.length > 0 && (() => {
+              const sorted = [...services].sort((a, b) => a.order - b.order);
+              const featured = sorted[0];
+              const remaining = sorted.slice(1);
+
+              return (
+                <>
+                  <div key={featured.id} className="service-card-featured">
+                    <span className="service-card-featured-tag">PAKET LENGKAP</span>
+                    <div>
+                      <div className="service-icon-box">{featured.icon}</div>
+                      <h3 className="service-title" style={{ fontSize: '1.45rem', marginBottom: '10px' }}>
+                        {featured.name}
+                      </h3>
+                      <p className="service-description" style={{ marginBottom: '14px' }}>
+                        {featured.description}
+                      </p>
+                      
+                      {/* Deliverables Checklist */}
+                      <ul className="service-deliverables-list">
+                        {activeSkripsiFeatures.map((feat, idx) => (
+                          <li key={idx}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--c-ivory)', padding: '24px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', height: '100%', justifyContent: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                          BIAYA
+                        </span>
+                        <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--c-royal-blue)', marginTop: '4px' }}>
+                          {featured.price}
+                        </div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          Bisa bayar nyicil per bab
+                        </span>
+                      </div>
+
+                      <a
+                        href={getWaLink(featured.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-whatsapp btn-lg"
+                        style={{ width: '100%' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                        </svg>
+                        <span>Tanya Paket Layanan</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Remaining Modular Services */}
+                  {remaining.map((service) => (
+                    <div key={service.id} className="service-card-modular">
+                      <div>
+                        <div className="service-icon-box">{service.icon}</div>
+                        <h3 className="service-title">{service.name}</h3>
+                        <p className="service-description">{service.description}</p>
+                      </div>
+                      <div className="service-footer">
+                        <div className="service-price-pill">{service.price}</div>
+                        <a
+                          href={getWaLink(service.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-editorial-outline btn-sm"
+                        >
+                          <span>Konsultasi</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </div>
       </section>
 
-      {/* ===================== PRICELIST SECTION (CLEAN TABLE) ===================== */}
-      <section className="section" id="pricelist" style={{ background: 'var(--section-alt-bg)' }}>
+      {/* ===================== KENAPA PERCAYAKAN TUGAS KE KAMI ===================== */}
+      <section className="section section-soft-blue" id="keunggulan">
         <div className="container">
-          <h2 className="section-title">Open Pricelist Transparan</h2>
+          <h2 className="section-title">Kenapa Percayakan Tugas ke Kami?</h2>
           <p className="section-subtitle">
-            Daftar perkiraan harga dan fasilitas pengerjaan. Biaya dapat disesuaikan dengan tingkat kesulitan dan deadline Anda.
+            Kami pastikan setiap tugas dikerjakan serius dan teliti agar dapat hasil dan nilai optimal.
+          </p>
+
+          <div className="standards-grid">
+            <div className="standard-card">
+              <div className="standard-icon-badge" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </div>
+              <div className="standard-content">
+                <h3>Referensi Valid &amp; Terkini</h3>
+                <p>
+                  Menggunakan referensi buku dan jurnal ilmiah yang relevan, valid, dan dapat dipertanggungjawabkan.
+                </p>
+              </div>
+            </div>
+
+            <div className="standard-card">
+              <div className="standard-icon-badge" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <div className="standard-content">
+                <h3>Format Sesuai Pedoman Tugas</h3>
+                <p>
+                  Format sitasi baku (APA, IEEE, Harvard, dll.) serta disesuaikan penuh dengan buku pedoman atau ketentuan tugas Anda.
+                </p>
+              </div>
+            </div>
+
+            <div className="standard-card">
+              <div className="standard-icon-badge" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <div className="standard-content">
+                <h3>Cek Turnitin Resmi &amp; Aman</h3>
+                <p>
+                  Pengecekan Turnitin no-repo resmi, menjaga naskah tetap aman tanpa tersimpan ke database publik.
+                </p>
+              </div>
+            </div>
+
+            <div className="standard-card">
+              <div className="standard-icon-badge" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <div className="standard-content">
+                <h3>Bisa Konsultasi &amp; Tanya Jawab</h3>
+                <p>
+                  Bukan cuma serah terima file: tim kami siap jelaskan isi tulisan dan mendampingi sampai tuntas disetujui.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== PRICELIST SECTION (Ivory Section - DESIGN.md §6) ===================== */}
+      <section className="section section-ivory" id="pricelist">
+        <div className="container">
+          <h2 className="section-title">Daftar Harga Terbuka</h2>
+          <p className="section-subtitle">
+            Perkiraan biaya ramah kantong dan transparan. Biaya fleksibel dan bisa disesuaikan dengan tingkat kesulitan serta deadline tugas Anda.
           </p>
 
           {/* Segmented Filter Controls */}
@@ -384,8 +608,8 @@ export default function LandingPage({
                 <tr>
                   <th style={{ width: '34%' }}>Jenis Layanan</th>
                   <th style={{ width: '32%' }}>Fasilitas &amp; Standar Kualitas</th>
-                  <th style={{ width: '16%' }}>Estimasi Waktu</th>
-                  <th style={{ width: '18%', textAlign: 'right' }}>Estimasi Biaya</th>
+                  <th style={{ width: '16%' }}>Waktu Pengerjaan</th>
+                  <th style={{ width: '18%', textAlign: 'right' }}>Perkiraan Biaya</th>
                 </tr>
               </thead>
               <tbody>
@@ -422,7 +646,7 @@ export default function LandingPage({
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div className="table-price">{service.price}</div>
-                        <span className="table-price-sub">Bisa negosiasi</span>
+                        <span className="table-price-sub">Bisa nego</span>
                         <a
                           href={getWaLink(service.name)}
                           target="_blank"
@@ -433,7 +657,7 @@ export default function LandingPage({
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                           </svg>
-                          <span>Konsultasi</span>
+                          <span>Tanya Admin</span>
                         </a>
                       </td>
                     </tr>
@@ -452,17 +676,16 @@ export default function LandingPage({
 
               return (
                 <div key={service.id} className="pricelist-mobile-card">
+                  {/* Top: Icon + Title + Category Badge ONLY (No price crowding) */}
                   <div className="pm-card-top">
                     <div className="pm-card-icon">{service.icon}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="pm-card-title-box">
                       <div className="pm-card-title">{service.name}</div>
                       <span className="table-service-badge">{category}</span>
                     </div>
-                    <div className="pm-card-price-badge">
-                      {service.price}
-                    </div>
                   </div>
 
+                  {/* Feature Checklist */}
                   <div className="feature-list" style={{ margin: '14px 0 12px' }}>
                     {features.map((feat, idx) => (
                       <div key={idx} className="feature-item">
@@ -472,19 +695,30 @@ export default function LandingPage({
                     ))}
                   </div>
 
-                  <div className="pm-card-bottom">
-                    <span className="time-badge">⏱️ {timeEst}</span>
+                  {/* Dedicated Price & Time Section - Completely separated */}
+                  <div className="pm-card-price-row">
+                    <div className="pm-card-price-info">
+                      <span className="pm-price-label">Perkiraan Biaya</span>
+                      <div className="pm-card-price-val">{service.price}</div>
+                      <span className="table-price-sub">Biaya fleksibel &amp; bisa nego/cicil</span>
+                    </div>
+                    <div className="time-badge">
+                      ⏱️ {timeEst}
+                    </div>
+                  </div>
+
+                  {/* Action CTA Button */}
+                  <div style={{ marginTop: '12px' }}>
                     <a
                       href={getWaLink(service.name)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn btn-whatsapp btn-sm"
-                      style={{ padding: '7px 14px' }}
+                      className="btn btn-whatsapp pm-card-btn"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                       </svg>
-                      <span>Konsultasi</span>
+                      <span>Tanya &amp; Pesan via WhatsApp</span>
                     </a>
                   </div>
                 </div>
@@ -494,84 +728,43 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ===================== WHY CHOOSE US ===================== */}
-      <section className="section" id="keunggulan">
-        <div className="container">
-          <h2 className="section-title">Keunggulan Layanan Kami</h2>
-          <p className="section-subtitle">
-            Standar profesional yang menjamin kualitas tulisan dan kenyamanan Anda.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-            <div className="service-card">
-              <div style={{ fontSize: '2rem', marginBottom: '14px' }}>🛡️</div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>100% Kerahasiaan Terjaga</h3>
-              <p style={{ fontSize: '0.9rem' }}>
-                Privasi Anda adalah prioritas mutlak. Identitas mahasiswa, materi tugas, dan kampus tidak akan pernah dibocorkan.
-              </p>
-            </div>
-            <div className="service-card">
-              <div style={{ fontSize: '2rem', marginBottom: '14px' }}>⚡</div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Tepat Waktu & Bisa Kilat</h3>
-              <p style={{ fontSize: '0.9rem' }}>
-                Jaminan pengerjaan tepat sebelum deadline. Tersedia jalur kilat 24 jam untuk tugas-tugas mendesak.
-              </p>
-            </div>
-            <div className="service-card">
-              <div style={{ fontSize: '2rem', marginBottom: '14px' }}>📊</div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Lolos Uji Turnitin Resmi</h3>
-              <p style={{ fontSize: '0.9rem' }}>
-                Karya orisinil dengan teknik parafrase rapi. Disertai laporan Turnitin bebas plagiarisme sesuai standar kampus.
-              </p>
-            </div>
-            <div className="service-card">
-              <div style={{ fontSize: '2rem', marginBottom: '14px' }}>🔄</div>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Garansi Revisi Sampai ACC</h3>
-              <p style={{ fontSize: '0.9rem' }}>
-                Bebas biaya revisi jika terdapat catatan dari dosen pembimbing hingga tugas disetujui sepenuhnya.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===================== WORKFLOW STEPS ===================== */}
-      <section className="section" style={{ background: 'var(--section-alt-bg)' }}>
+      {/* ===================== WORKFLOW STEPS PIPELINE (Soft Blue Section - DESIGN.md §6) ===================== */}
+      <section className="section section-soft-blue" id="alur">
         <div className="container">
           <h2 className="section-title">Alur Pemesanan 4 Langkah</h2>
           <p className="section-subtitle">
-            Proses pemesanan mudah, cepat, dan transparan tanpa prosedur rumit.
+            Proses pesan simpel, santai, dan jelas tanpa ribet.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+          <div className="steps-pipeline">
             {steps.map((st) => (
-              <div key={st.num} className="service-card" style={{ position: 'relative' }}>
-                <span style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent-primary)', opacity: 0.35, position: 'absolute', top: '16px', right: '18px' }}>
-                  {st.num}
-                </span>
-                <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', paddingRight: '36px' }}>{st.title}</h3>
-                <p style={{ fontSize: '0.88rem' }}>{st.desc}</p>
+              <div key={st.num} className="pipeline-step">
+                <div className="pipeline-step-header">
+                  <span className="pipeline-num-badge">LANGKAH {st.num}</span>
+                </div>
+                <h3 className="pipeline-step-title">{st.title}</h3>
+                <p className="pipeline-step-desc">{st.desc}</p>
               </div>
             ))}
           </div>
 
           {/* QRIS Payment Method Card */}
-          <div className="qris-card" style={{ marginTop: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ maxWidth: '640px' }}>
+          <div className="qris-card">
+            <div className="qris-card-inner">
+              <div className="qris-card-info">
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: 'var(--tag-bg)', borderRadius: '6px', marginBottom: '12px' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-primary)' }}>
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                   <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--tag-text)', letterSpacing: '0.03em' }}>
-                    METODE PEMBAYARAN RESMI & FLEKSIBEL
+                    PEMBAYARAN RESMI &amp; PRAKTIS
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px', letterSpacing: '-0.015em' }}>
-                  Pembayaran Aman & Praktis via QRIS (All Payment)
+                  Bayar Mudah &amp; Aman Pakai QRIS (Semua Bank &amp; E-Wallet)
                 </h3>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '16px' }}>
-                  Mendukung seluruh bank & dompet digital di Indonesia. Cukup scan barcode QRIS kami tanpa perlu repot mengetik nomor rekening secara manual.
+                  Bisa bayar dari bank apa saja atau dompet digital favoritmu. Cukup scan barcode QRIS kami tanpa perlu repot mengetik nomor rekening secara manual.
                 </p>
 
                 {/* Bank / E-Wallet Badges */}
@@ -589,12 +782,11 @@ export default function LandingPage({
               </div>
 
               {/* Action Button to Open QRIS */}
-              <div>
+              <div className="qris-card-action">
                 <button
                   type="button"
                   onClick={() => setShowQrisModal(true)}
-                  className="btn btn-primary btn-lg"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', boxShadow: 'var(--shadow-md)' }}
+                  className="btn btn-primary qris-btn-action"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="7" height="7" />
@@ -610,27 +802,30 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* ===================== TESTIMONIALS (SS TESTIMONI) ===================== */}
-      {testimonials.length > 0 && (
-        <section className="section" id="testimoni">
+      {/* ===================== TESTIMONIALS ===================== */}
+      {activeTestimonials.length > 0 && (
+        <section className="section section-paper" id="testimoni">
           <div className="container">
-            <h2 className="section-title">Screenshot Bukti Testimoni Klien</h2>
+            <h2 className="section-title">Screenshot Bukti Chat &amp; Hasil ACC Klien</h2>
             <p className="section-subtitle">
-              Tangkapan layar nyata kepuasan mahasiswa dari berbagai universitas. Klik kartu gambar untuk memperbesar tangkapan layar.
+              Tangkapan layar asli dari klien yang sudah kami bantu menyelesaikan tugas akademiknya. Klik gambar untuk memperbesar.
             </p>
 
             <div className="testimonials-grid">
-              {testimonials.sort((a, b) => a.order - b.order).map((t) => (
-                <div
+              {activeTestimonials.sort((a, b) => a.order - b.order).map((t) => (
+                <button
+                  type="button"
                   key={t.id}
                   className="testimonial-card"
                   onClick={() => setPreviewImage(t.imageUrl)}
-                  title="Klik untuk melihat resolusi penuh"
+                  aria-label={`Perbesar bukti screenshot testimoni ${t.name}`}
                 >
                   <img
                     src={t.imageUrl}
                     alt={`Screenshot Testimoni ${t.name}`}
                     className="testimonial-image"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="testimonial-info">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -639,21 +834,21 @@ export default function LandingPage({
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.04em',
-                        color: 'var(--tag-text)',
-                        background: 'var(--tag-bg)',
+                        color: 'var(--c-gold)',
+                        background: 'rgba(198, 164, 106, 0.12)',
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        border: '1px solid var(--border-color)',
+                        border: '1px solid rgba(198, 164, 106, 0.3)',
                       }}>
                         Pengerjaan Tugas
                       </span>
                       <div className="testimonial-stars">{'★'.repeat(t.rating)}</div>
                     </div>
-                    <div className="testimonial-name" style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.35 }}>
+                    <div className="testimonial-name" style={{ fontSize: '0.95rem', fontWeight: 700, lineHeight: 1.35 }}>
                       {t.name}
                     </div>
                     <span className="testimonial-zoom-hint">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         <line x1="11" y1="8" x2="11" y2="14"></line>
@@ -662,29 +857,32 @@ export default function LandingPage({
                       <span>Klik untuk zoom screenshot chat / ACC</span>
                     </span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ===================== FAQ SECTION ===================== */}
-      <section className="section" id="faq" style={{ background: 'var(--section-alt-bg)' }}>
+      {/* ===================== FAQ SECTION (Ivory Section - DESIGN.md §6) ===================== */}
+      <section className="section section-ivory" id="faq">
         <div className="container" style={{ maxWidth: '780px' }}>
           <h2 className="section-title">Pertanyaan yang Sering Diajukan (FAQ)</h2>
           <p className="section-subtitle">
-            Jawaban seputar privasi, revisi, turnitin, dan prosedur pemesanan.
+            Jawaban seputar privasi, revisi, Turnitin, dan cara pemesanan.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                className="faq-item"
-                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-              >
-                <div className="faq-header">
+            {activeFaqs.map((faq, idx) => (
+              <div key={idx} className="faq-item">
+                <button
+                  type="button"
+                  className="faq-header-btn"
+                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+                  aria-expanded={activeFaq === idx}
+                  aria-controls={`faq-ans-${idx}`}
+                  id={`faq-hdr-${idx}`}
+                >
                   <span className="faq-question">{faq.q}</span>
                   <svg
                     className={`faq-icon ${activeFaq === idx ? 'open' : ''}`}
@@ -694,12 +892,15 @@ export default function LandingPage({
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    aria-hidden="true"
                   >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
-                </div>
+                </button>
                 {activeFaq === idx && (
-                  <p className="faq-answer">{faq.a}</p>
+                  <div id={`faq-ans-${idx}`} role="region" aria-labelledby={`faq-hdr-${idx}`}>
+                    <p className="faq-answer">{faq.a}</p>
+                  </div>
                 )}
               </div>
             ))}
@@ -708,26 +909,26 @@ export default function LandingPage({
       </section>
 
       {/* ===================== CTA BOX ===================== */}
-      <section className="section" style={{ textAlign: 'center' }}>
+      <section className="section section-paper" style={{ textAlign: 'center' }}>
         <div className="container">
-          <div className="table-card" style={{ padding: '54px 32px', maxWidth: '840px', margin: '0 auto', background: 'var(--bg-card)' }}>
-            <h2 style={{ fontSize: '2rem', marginBottom: '14px', letterSpacing: '-0.025em' }}>
-              Deadline Sudah Dekat? Jangan Ditunda Lagi!
+          <div className="cta-card-box">
+            <h2>
+              Deadline Mepet? Tenang, Jangan Panik!
             </h2>
-            <p style={{ maxWidth: '580px', margin: '0 auto 28px', fontSize: '1rem' }}>
-              Konsultasikan judul, tugas harian, maupun skripsi Anda sekarang dengan admin. Tim kami siap merespons dalam hitungan menit.
+            <p>
+              Konsultasikan tugas sekolah, tugas kuliah, makalah, karya ilmiah, atau skripsi Anda sekarang dengan admin. Kami siap respons cepat dan bantu cari solusi terbaik.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
               <a href={defaultWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                 </svg>
-                <span>Chat Admin WhatsApp</span>
+                <span>Tanya Admin Sekarang</span>
               </a>
               <button
                 type="button"
                 onClick={() => setShowQrisModal(true)}
-                className="btn btn-secondary btn-lg"
+                className="btn btn-editorial-outline btn-lg"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -738,9 +939,6 @@ export default function LandingPage({
                 </svg>
                 <span>Lihat Kode QRIS</span>
               </button>
-              <a href="/admin" className="btn btn-secondary btn-lg">
-                <span>Portal Admin</span>
-              </a>
             </div>
           </div>
         </div>
@@ -752,7 +950,7 @@ export default function LandingPage({
           <div className="footer-grid">
             {/* Column 1: Brand & Mission */}
             <div>
-              <a href="#" className="navbar-logo" style={{ marginBottom: '14px' }}>
+              <a href="/" className="navbar-logo" style={{ marginBottom: '14px' }}>
                 {config.logoImageUrl ? (
                   <img
                     src={config.logoImageUrl}
@@ -773,7 +971,7 @@ export default function LandingPage({
                 </div>
               </a>
               <p className="footer-brand-desc">
-                Solusi pendampingan dan asistensi tugas akademik tepercaya untuk mahasiswa di seluruh Indonesia. Mengutamakan privasi 100%, orisinalitas riset, dan garansi revisi sampai ACC.
+                Teman bimbingan dan asistensi tugas akademik tepercaya di seluruh Indonesia. Privasi 100% aman, bebas plagiasi, dan garansi dibantu sampai tuntas.
               </p>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '16px', padding: '4px 10px', background: 'var(--tag-bg)', borderRadius: '6px', fontSize: '0.78rem', color: 'var(--tag-text)', fontWeight: 600 }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
@@ -783,26 +981,26 @@ export default function LandingPage({
 
             {/* Column 2: Layanan */}
             <div>
-              <div className="footer-heading">Layanan Akademik</div>
+              <div className="footer-heading">Pilihan Layanan</div>
               <ul className="footer-links">
-                <li><a href="#layanan" className="footer-link">Skripsi & Tesis Bab 1-5</a></li>
-                <li><a href="#layanan" className="footer-link">Proposal Skripsi & Olah Data</a></li>
-                <li><a href="#layanan" className="footer-link">Artikel Jurnal SINTA / Scopus</a></li>
-                <li><a href="#layanan" className="footer-link">Makalah & Review Paper</a></li>
-                <li><a href="#layanan" className="footer-link">Esai Beasiswa & Opini</a></li>
-                <li><a href="#layanan" className="footer-link">Tugas Teknik & Pemrograman</a></li>
+                <li><a href="#layanan" className="footer-link">Skripsi (per Bab)</a></li>
+                <li><a href="#layanan" className="footer-link">Proposal Skripsi</a></li>
+                <li><a href="#layanan" className="footer-link">Artikel Ilmiah &amp; Jurnal</a></li>
+                <li><a href="#layanan" className="footer-link">Makalah Akademik</a></li>
+                <li><a href="#layanan" className="footer-link">Esai, Opini &amp; Paper</a></li>
+                <li><a href="#layanan" className="footer-link">Tugas Teknik &amp; Policy Brief</a></li>
               </ul>
             </div>
 
             {/* Column 3: Jaminan & Standar */}
             <div>
-              <div className="footer-heading">Standar & Garansi</div>
+              <div className="footer-heading">Jaminan Kami</div>
               <ul className="footer-links">
-                <li className="footer-link">🛡️ 100% Kerahasiaan Data</li>
-                <li className="footer-link">📊 Lolos Turnitin Resmi</li>
-                <li className="footer-link">🔄 Garansi Revisi Sampai ACC</li>
-                <li className="footer-link">⚡ Jalur Kilat 24-48 Jam</li>
-                <li className="footer-link">👨‍🏫 Tim Lulusan PTN Ternama</li>
+                <li className="footer-link">🛡️ Privasi 100% Terjaga</li>
+                <li className="footer-link">📊 Lolos Cek Turnitin / Orisinal</li>
+                <li className="footer-link">🔄 Garansi Revisi Sampai Tuntas</li>
+                <li className="footer-link">⚡ Pengerjaan Tepat Waktu / Kilat</li>
+                <li className="footer-link">🤝 Bimbingan Ramah &amp; Jelas</li>
               </ul>
             </div>
 
@@ -845,11 +1043,17 @@ export default function LandingPage({
 
       {/* ===================== QRIS PAYMENT MODAL ===================== */}
       {showQrisModal && (
-        <div className="modal-overlay" onClick={() => setShowQrisModal(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowQrisModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="qris-modal-title"
+        >
           <div className="qris-modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <span id="qris-modal-title" style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                   Pembayaran QRIS Resmi
                 </span>
                 <span style={{ fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -857,7 +1061,9 @@ export default function LandingPage({
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setShowQrisModal(false)}
+                aria-label="Tutup popup pembayaran QRIS"
                 style={{
                   background: 'none',
                   border: 'none',
@@ -989,6 +1195,9 @@ export default function LandingPage({
         <div
           className="modal-overlay"
           onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pratinjau Bukti Testimoni ACC"
           style={{ cursor: 'zoom-out' }}
         >
           <div
@@ -996,7 +1205,9 @@ export default function LandingPage({
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               onClick={() => setPreviewImage(null)}
+              aria-label="Tutup pratinjau bukti testimoni"
               style={{
                 position: 'absolute',
                 top: '-14px',

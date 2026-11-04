@@ -17,8 +17,14 @@ export interface Testimonial {
   order: number;
 }
 
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
 export interface SiteConfig {
   whatsappNumber: string;
+  heroEyebrow?: string;
   heroTitle: string;
   heroDescription: string;
   totalClients: string;
@@ -26,4 +32,6 @@ export interface SiteConfig {
   satisfaction: string;
   qrisImageUrl?: string | null;
   logoImageUrl?: string | null;
+  skripsiFeatures?: string[];
+  faqs?: FaqItem[];
 }

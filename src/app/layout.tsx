@@ -3,7 +3,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeContext';
 
 export const metadata: Metadata = {
-  title: 'Bryz Academic Support — Jasa Bantuan Akademik Terpercaya',
+  title: 'Bryz Academic Support - Jasa Bantuan Akademik Terpercaya',
   description: 'Layanan bantuan akademik profesional untuk skripsi, proposal, artikel ilmiah, makalah, esai, paper, dan tugas teknik. Cepat, aman, orisinil, dan bergaransi.',
 };
 
