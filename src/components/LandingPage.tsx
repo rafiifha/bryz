@@ -94,14 +94,19 @@ export default function LandingPage({
         if (c && typeof c === 'object') {
           if (isBlobActive) {
             setConfig(c);
+            try { localStorage.setItem('bryz_site_config', JSON.stringify(c)); } catch {}
           } else {
-            setConfig((prev) => ({
-              ...c,
-              ...prev,
-              logoImageUrl: prev.logoImageUrl || c.logoImageUrl,
-              qrisImageUrl: prev.qrisImageUrl || c.qrisImageUrl,
-              whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : c.whatsappNumber,
-            }));
+            setConfig((prev) => {
+              const updated = {
+                ...prev,
+                ...c,
+                logoImageUrl: prev.logoImageUrl || c.logoImageUrl,
+                qrisImageUrl: prev.qrisImageUrl || c.qrisImageUrl,
+                whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : c.whatsappNumber,
+              };
+              try { localStorage.setItem('bryz_site_config', JSON.stringify(updated)); } catch {}
+              return updated;
+            });
           }
         }
       })

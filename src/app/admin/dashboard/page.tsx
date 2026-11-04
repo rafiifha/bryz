@@ -98,17 +98,49 @@ export default function AdminDashboard() {
           localStorage.setItem('bryz_site_config', JSON.stringify(confData));
         } catch {}
       } else {
-        // Blob belum terhubung di Vercel: jaga agar editan user tidak hilang tertimpa default server
+        // Blob belum terhubung di Vercel: sinkronkan keterangan terbaru dari server & default sistem
+        const defaultSkripsiFeatures = [
+          'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
+          'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
+          'Sudah termasuk cek Turnitin aman dan gratis revisi sampai ACC',
+        ];
+        const defaultFaqs = [
+          { q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?', a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun. Privasi Anda aman bersama kami.' },
+          { q: 'Bagaimana jika ada catatan revisi?', a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.' },
+          { q: 'Apakah tugas dicek dengan Turnitin resmi?', a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository (bebas plagiasi dan tidak tersimpan di database publik).' },
+          { q: 'Berapa lama estimasi pengerjaannya?', a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu, atau bisa pengerjaan terjadwal bertahap.' },
+          { q: 'Bagaimana sistem pembayarannya?', a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.' },
+        ];
+
         const mergedConf: SiteConfig = {
-          ...confData,
-          ...(localConf || {}),
+          whatsappNumber: confData.whatsappNumber || localConf?.whatsappNumber || '6285861950414',
+          heroEyebrow: confData.heroEyebrow || 'Bimbingan & Bantu Tugas Akademik Terpercaya',
+          heroTitle: confData.heroTitle || 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
+          heroDescription: confData.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
+          skripsiFeatures: (confData.skripsiFeatures && confData.skripsiFeatures.length > 0)
+            ? confData.skripsiFeatures
+            : defaultSkripsiFeatures,
+          faqs: (confData.faqs && confData.faqs.length > 0)
+            ? confData.faqs
+            : defaultFaqs,
+          totalClients: confData.totalClients || '100+',
+          totalProjects: confData.totalProjects || '100+',
+          satisfaction: confData.satisfaction || '100%',
+          logoImageUrl: localConf?.logoImageUrl || confData.logoImageUrl || null,
+          qrisImageUrl: localConf?.qrisImageUrl || confData.qrisImageUrl || null,
         };
-        const finalServices = (localServ && localServ.length > 0) ? localServ : servData;
-        const finalTestimonials = (localTest !== null) ? localTest : testData;
+
+        const finalServices = (servData && servData.length > 0) ? servData : (localServ || []);
+        const finalTestimonials = (testData && testData.length > 0) ? testData : (localTest || []);
 
         setServices(finalServices);
         setTestimonials(finalTestimonials);
         setConfig(mergedConf);
+        try {
+          localStorage.setItem('bryz_site_config', JSON.stringify(mergedConf));
+          localStorage.setItem('bryz_services', JSON.stringify(finalServices));
+          localStorage.setItem('bryz_testimonials', JSON.stringify(finalTestimonials));
+        } catch {}
       }
     } catch {
       showToast('Gagal memuat data dari database', 'error');
@@ -826,20 +858,57 @@ export default function AdminDashboard() {
                   Konfigurasikan nomor WhatsApp penerima order dan teks pemasaran utama.
                 </p>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={saving}>
-                {saving ? (
-                  <span>Menyimpan...</span>
-                ) : (
-                  <>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                      <polyline points="17 21 17 13 7 13 7 21" />
-                      <polyline points="7 3 7 8 15 8" />
-                    </svg>
-                    <span>Simpan Pengaturan</span>
-                  </>
-                )}
-              </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    const defaultSkripsiFeatures = [
+                      'Bisa ngerjain Bab 1 sampai 5 lengkap, disesuaikan panduan kampusmu',
+                      'Bantu olah data (SPSS, Excel, SEM, dll.) plus penjelasannya',
+                      'Sudah termasuk cek Turnitin aman dan gratis revisi sampai ACC',
+                    ];
+                    const defaultFaqs = [
+                      { q: 'Apakah kerahasiaan identitas dan data saya dijamin aman?', a: '100% Terjamin Rahasia. Kami tidak pernah membagikan nama, instansi, maupun file tugas Anda ke pihak mana pun. Privasi Anda aman bersama kami.' },
+                      { q: 'Bagaimana jika ada catatan revisi?', a: 'Santai, ada garansi revisi gratis tanpa biaya tambahan sampai tugas atau naskah Anda disetujui, sesuai kesepakatan topik dan panduan awal.' },
+                      { q: 'Apakah tugas dicek dengan Turnitin resmi?', a: 'Ya, seluruh karya tulis dan naskah akademik dicek langsung menggunakan Turnitin resmi no-repository (bebas plagiasi dan tidak tersimpan di database publik).' },
+                      { q: 'Berapa lama estimasi pengerjaannya?', a: 'Bisa disesuaikan dengan kebutuhan Anda. Butuh pengerjaan kilat (24 - 48 jam) untuk tugas mendesak? Kami siap bantu, atau bisa pengerjaan terjadwal bertahap.' },
+                      { q: 'Bagaimana sistem pembayarannya?', a: 'Sangat fleksibel dan aman: Bisa DP mulai 30% - 50% untuk mulai pengerjaan. Pelunasan dilakukan setelah tugas selesai dan Anda cek hasilnya.' },
+                    ];
+                    const synced = {
+                      ...config,
+                      heroEyebrow: 'Bimbingan & Bantu Tugas Akademik Terpercaya',
+                      heroTitle: 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
+                      heroDescription: 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
+                      skripsiFeatures: defaultSkripsiFeatures,
+                      faqs: defaultFaqs,
+                    };
+                    setConfig(synced);
+                    showToast('Keterangan berhasil disinkronkan dengan Landing Page!', 'success');
+                  }}
+                  title="Salin keterangan terbaru landing page ke formulir admin"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                  </svg>
+                  <span>Sinkronkan Teks Landing Page</span>
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={saving}>
+                  {saving ? (
+                    <span>Menyimpan...</span>
+                  ) : (
+                    <>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                      </svg>
+                      <span>Simpan Pengaturan</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Logo Brand Card */}
