@@ -485,10 +485,10 @@ export default function LandingPage({
               <table className="clean-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '24%' }}>Jenis Layanan</th>
-                    <th style={{ width: '38%' }}>Fasilitas &amp; Standar Kualitas</th>
-                    <th style={{ width: '18%', textAlign: 'center' }}>Waktu Pengerjaan</th>
-                    <th style={{ width: '20%', textAlign: 'right' }}>Perkiraan Biaya</th>
+                    <th style={{ width: '22%' }}>Jenis Layanan</th>
+                    <th style={{ width: '28%' }}>Fasilitas &amp; Standar Kualitas</th>
+                    <th style={{ width: '26%', textAlign: 'center' }}>Waktu Pengerjaan</th>
+                    <th style={{ width: '24%', textAlign: 'right' }}>Perkiraan Biaya</th>
                   </tr>
                 </thead>
                 <tbody>
