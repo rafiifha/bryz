@@ -481,68 +481,70 @@ export default function LandingPage({
 
           {/* Desktop Clean Table View */}
           <div className="table-card pricelist-desktop-view">
-            <table className="clean-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '34%' }}>Jenis Layanan</th>
-                  <th style={{ width: '32%' }}>Fasilitas &amp; Standar Kualitas</th>
-                  <th style={{ width: '16%' }}>Waktu Pengerjaan</th>
-                  <th style={{ width: '18%', textAlign: 'right' }}>Perkiraan Biaya</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
-                  const category = service.category || getCategoryFromService(service.name);
-                  const timeEst = service.estimatedTime || getEstimatedTime(service.name);
-                  const features = (service.features && service.features.length > 0) ? service.features : getFeatures(service.name);
+            <div className="table-responsive">
+              <table className="clean-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '24%' }}>Jenis Layanan</th>
+                    <th style={{ width: '38%' }}>Fasilitas &amp; Standar Kualitas</th>
+                    <th style={{ width: '18%' }}>Waktu Pengerjaan</th>
+                    <th style={{ width: '20%', textAlign: 'right' }}>Perkiraan Biaya</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredServices.sort((a, b) => a.order - b.order).map((service) => {
+                    const category = service.category || getCategoryFromService(service.name);
+                    const timeEst = service.estimatedTime || getEstimatedTime(service.name);
+                    const features = (service.features && service.features.length > 0) ? service.features : getFeatures(service.name);
 
-                  return (
-                    <tr key={service.id}>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                          <div className="pricelist-icon-box">{service.icon}</div>
-                          <div>
-                            <div className="table-service-name">{service.name}</div>
-                            <span className="table-service-badge">{category}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="feature-list">
-                          {features.map((feat, idx) => (
-                            <div key={idx} className="feature-item">
-                              <span className="feature-check">✓</span>
-                              <span>{feat}</span>
+                    return (
+                      <tr key={service.id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                            <div className="pricelist-icon-box">{service.icon}</div>
+                            <div>
+                              <div className="table-service-name">{service.name}</div>
+                              <span className="table-service-badge">{category}</span>
                             </div>
-                          ))}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="time-badge">
-                          ⏱️ {timeEst}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div className="table-price">{service.price}</div>
-                        <span className="table-price-sub">Bisa nego</span>
-                        <a
-                          href={getWaLink(service.name)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-whatsapp btn-sm"
-                          style={{ marginTop: '8px', display: 'inline-flex' }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
-                          </svg>
-                          <span>Tanya Admin</span>
-                        </a>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="feature-list">
+                            {features.map((feat, idx) => (
+                              <div key={idx} className="feature-item">
+                                <span className="feature-check">✓</span>
+                                <span>{feat}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="time-badge">
+                            ⏱️ {timeEst}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="table-price">{service.price}</div>
+                          <span className="table-price-sub">Bisa nego</span>
+                          <a
+                            href={getWaLink(service.name)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-whatsapp btn-sm"
+                            style={{ marginTop: '8px', display: 'inline-flex' }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                            </svg>
+                            <span>Tanya Admin</span>
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Mobile Clean Cards View */}

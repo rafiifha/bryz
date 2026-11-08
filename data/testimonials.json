@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1",
+    "name": "Skripsi Bab 1-5 & Olah Data (ACC Sidang)",
+    "imageUrl": "/uploads/1793371889528-17jpd6.jpeg",
+    "rating": 5,
+    "order": 1
+  },
+  {
+    "id": "2",
+    "name": "Proposal Skripsi & Metodologi (Lolos Seminar)",
+    "imageUrl": "/uploads/1793372785946-kpovb6.jpeg",
+    "rating": 5,
+    "order": 2
+  }
+]
