@@ -487,7 +487,7 @@ export default function LandingPage({
                   <tr>
                     <th style={{ width: '24%' }}>Jenis Layanan</th>
                     <th style={{ width: '38%' }}>Fasilitas &amp; Standar Kualitas</th>
-                    <th style={{ width: '18%' }}>Waktu Pengerjaan</th>
+                    <th style={{ width: '18%', textAlign: 'center' }}>Waktu Pengerjaan</th>
                     <th style={{ width: '20%', textAlign: 'right' }}>Perkiraan Biaya</th>
                   </tr>
                 </thead>
@@ -518,7 +518,7 @@ export default function LandingPage({
                             ))}
                           </div>
                         </td>
-                        <td>
+                        <td style={{ textAlign: 'center' }}>
                           <span className="time-badge">
                             ⏱️ {timeEst}
                           </span>
