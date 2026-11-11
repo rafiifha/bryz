@@ -948,7 +948,10 @@ export default function AdminDashboard() {
                             borderRadius: '6px',
                             fontWeight: 700,
                             fontSize: '0.84rem',
-                            whiteSpace: 'nowrap',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            maxWidth: '100%',
                           }}>
                             {s.price}
                           </span>

@@ -1060,10 +1060,12 @@ p {
 }
 
 .table-price {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 800;
   color: var(--accent-secondary);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
@@ -1179,6 +1181,7 @@ p {
   color: var(--accent-secondary);
   letter-spacing: -0.015em;
   line-height: 1.3;
+  word-break: break-word;
 }
 
 .pm-card-btn {
