@@ -181,6 +181,8 @@ export default function AdminDashboard() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -316,6 +318,8 @@ export default function AdminDashboard() {
       if (e.key === 'Escape') {
         setShowServiceModal(false);
         setShowTestimonialModal(false);
+        setPreviewImage(null);
+        setIsZoomed(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -969,7 +973,15 @@ export default function AdminDashboard() {
                         </td>
                         <td>
                           {s.imageUrl ? (
-                            <img src={s.imageUrl} alt={s.name} style={{ width: '48px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
+                            <button
+                              type="button"
+                              onClick={() => { setPreviewImage(s.imageUrl!); setIsZoomed(false); }}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'zoom-in', display: 'block' }}
+                              title="Klik untuk perbesar gambar"
+                              aria-label={`Perbesar gambar ${s.name}`}
+                            >
+                              <img src={s.imageUrl} alt={s.name} style={{ width: '48px', height: '36px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }} />
+                            </button>
                           ) : (
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Default</span>
                           )}
@@ -1082,13 +1094,52 @@ export default function AdminDashboard() {
                     display: 'flex',
                     flexDirection: 'column',
                   }}>
-                    <div style={{ position: 'relative', height: '200px', background: 'var(--bg-secondary)' }}>
+                    <button
+                      type="button"
+                      onClick={() => { setPreviewImage(t.imageUrl); setIsZoomed(false); }}
+                      style={{
+                        position: 'relative',
+                        height: '200px',
+                        background: 'var(--bg-secondary)',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'zoom-in',
+                        display: 'block',
+                        width: '100%',
+                        textAlign: 'left',
+                      }}
+                      title="Klik untuk melihat bukti screenshot chat/ACC lebih jelas"
+                      aria-label={`Perbesar screenshot ${t.name}`}
+                    >
                       <img
                         src={t.imageUrl}
                         alt={`Testimoni ${t.name}`}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
-                    </div>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '8px',
+                        right: '8px',
+                        background: 'rgba(0,0,0,0.7)',
+                        color: '#ffffff',
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backdropFilter: 'blur(4px)',
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          <line x1="11" y1="8" x2="11" y2="14" />
+                          <line x1="8" y1="11" x2="14" y2="11" />
+                        </svg>
+                        <span>Perbesar</span>
+                      </div>
+                    </button>
                     <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
                       <div>
                         <span style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--tag-text)', background: 'var(--tag-bg)', padding: '2px 6px', borderRadius: '4px' }}>
@@ -1886,6 +1937,149 @@ export default function AdminDashboard() {
       {toast && (
         <div className={`toast ${toast.type === 'success' ? 'toast-success' : 'toast-error'}`}>
           {toast.type === 'success' ? '✓ ' : '✕ '} {toast.message}
+        </div>
+      )}
+
+      {/* ===================== LIGHTBOX PREVIEW MODAL ===================== */}
+      {previewImage && (
+        <div
+          className="modal-overlay"
+          onClick={() => { setPreviewImage(null); setIsZoomed(false); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pratinjau Screenshot Bukti"
+          style={{ cursor: 'zoom-out', padding: '16px', zIndex: 2100 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: isZoomed ? '96vw' : '88vw',
+              maxHeight: '94vh',
+              background: 'var(--bg-card)',
+              borderRadius: '14px',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow-lg)',
+              overflow: 'hidden',
+              cursor: 'default',
+            }}
+          >
+            {/* Top Toolbar */}
+            <div style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 16px',
+              borderBottom: '1px solid var(--border-color)',
+              background: 'var(--bg-secondary)',
+              gap: '12px',
+              flexWrap: 'wrap',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Pratinjau Bukti / Screenshot</span>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                  {isZoomed ? '• Mode Zoom 100% (Scroll untuk baca chat)' : '• Klik gambar atau tombol zoom untuk perbesar'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsZoomed(!isZoomed)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '6px 12px', minHeight: '36px' }}
+                  title={isZoomed ? 'Perkecil ke ukuran pas layar' : 'Perbesar tulisan chat screenshot'}
+                >
+                  {isZoomed ? (
+                    <>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                      </svg>
+                      <span>Perkecil</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                      </svg>
+                      <span>Perbesar (Baca Chat)</span>
+                    </>
+                  )}
+                </button>
+                <a
+                  href={previewImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '6px 12px', minHeight: '36px', textDecoration: 'none' }}
+                  title="Buka gambar resolusi asli di tab baru"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  <span>Buka Tab Baru</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => { setPreviewImage(null); setIsZoomed(false); }}
+                  aria-label="Tutup pratinjau"
+                  className="btn btn-secondary btn-sm"
+                  style={{ minWidth: '36px', minHeight: '36px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable / Zoomable image area */}
+            <div
+              style={{
+                width: '100%',
+                maxHeight: 'calc(94vh - 60px)',
+                overflow: 'auto',
+                display: 'flex',
+                justifyContent: isZoomed ? 'flex-start' : 'center',
+                alignItems: isZoomed ? 'flex-start' : 'center',
+                padding: '16px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                cursor: isZoomed ? 'zoom-out' : 'zoom-in',
+              }}
+              onClick={() => setIsZoomed(!isZoomed)}
+              title={isZoomed ? 'Klik untuk perkecil tampilan' : 'Klik untuk perbesar tulisan chat screenshot'}
+            >
+              <img
+                src={previewImage}
+                alt="Bukti Screenshot Testimoni"
+                style={{
+                  display: 'block',
+                  margin: 'auto',
+                  borderRadius: '8px',
+                  boxShadow: 'var(--shadow-md)',
+                  transition: 'max-width 0.2s ease, width 0.2s ease',
+                  ...(isZoomed ? {
+                    width: 'auto',
+                    maxWidth: 'none',
+                    minWidth: 'min(100%, 720px)',
+                  } : {
+                    maxWidth: '100%',
+                    maxHeight: 'calc(94vh - 92px)',
+                    objectFit: 'contain',
+                  }),
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
