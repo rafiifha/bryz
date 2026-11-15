@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getTestimonials, addTestimonial, deleteTestimonial } from '@/lib/data';
+import { getTestimonials, addTestimonial, updateTestimonial, deleteTestimonial } from '@/lib/data';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { isValidMonth } from '@/lib/testimonialMonth';
 
@@ -32,6 +32,32 @@ export async function POST(request: Request) {
 
     revalidatePath('/');
     return NextResponse.json(testimonial, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  if (!verifyAuth(request)) return unauthorizedResponse();
+
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Testimonial ID wajib disertakan' }, { status: 400 });
+    }
+    if (updates.month && !isValidMonth(updates.month)) {
+      return NextResponse.json({ error: 'Bulan testimoni tidak valid (format YYYY-MM)' }, { status: 400 });
+    }
+
+    const testimonial = await updateTestimonial(id, updates);
+    if (!testimonial) {
+      return NextResponse.json({ error: 'Testimoni tidak ditemukan' }, { status: 404 });
+    }
+
+    revalidatePath('/');
+    return NextResponse.json(testimonial);
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }

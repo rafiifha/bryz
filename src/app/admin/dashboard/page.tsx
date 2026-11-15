@@ -167,9 +167,11 @@ export default function AdminDashboard() {
   const [serviceImageUrl, setServiceImageUrl] = useState('');
 
   // Testimonial form states
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
   const [testimonialName, setTestimonialName] = useState('');
   const [testimonialRating, setTestimonialRating] = useState(5);
   const [testimonialImage, setTestimonialImage] = useState<File | null>(null);
+  const [testimonialImageUrl, setTestimonialImageUrl] = useState('');
   const [testimonialMonth, setTestimonialMonth] = useState(currentMonth());
 
   // QRIS form states
@@ -468,32 +470,57 @@ export default function AdminDashboard() {
   };
 
   const openAddTestimonial = () => {
+    setEditingTestimonial(null);
     setTestimonialName('');
     setTestimonialRating(5);
     setTestimonialImage(null);
+    setTestimonialImageUrl('');
     setTestimonialMonth(currentMonth());
     setShowTestimonialModal(true);
   };
 
+  const openEditTestimonial = (t: Testimonial) => {
+    setEditingTestimonial(t);
+    setTestimonialName(t.name);
+    setTestimonialRating(t.rating);
+    setTestimonialImage(null);
+    setTestimonialImageUrl(t.imageUrl || '');
+    setTestimonialMonth(t.month || currentMonth());
+    setShowTestimonialModal(true);
+  };
+
   const saveTestimonial = async () => {
-    if (!testimonialName.trim() || !testimonialImage) {
-      showToast('Nama klien dan file screenshot wajib disertakan', 'error');
+    if (!testimonialName.trim()) {
+      showToast('Nama klien/judul tugas wajib diisi', 'error');
+      return;
+    }
+
+    if (!editingTestimonial && !testimonialImage) {
+      showToast('File screenshot testimoni wajib disertakan', 'error');
       return;
     }
 
     setSaving(true);
     try {
-      const imageUrl = await uploadFile(testimonialImage);
-      const newTestimonial: Testimonial = {
-        id: Date.now().toString(),
+      let imageUrl = testimonialImageUrl;
+      if (testimonialImage) {
+        imageUrl = await uploadFile(testimonialImage);
+      }
+
+      const targetId = editingTestimonial ? editingTestimonial.id : Date.now().toString();
+      const updatedItem: Testimonial = {
+        id: targetId,
         name: testimonialName,
         imageUrl,
         rating: testimonialRating,
-        order: testimonials.length + 1,
+        order: editingTestimonial ? editingTestimonial.order : testimonials.length + 1,
         month: testimonialMonth,
       };
+
       setTestimonials((prev) => {
-        const next = [...prev, newTestimonial];
+        const next = editingTestimonial
+          ? prev.map((t) => (t.id === targetId ? updatedItem : t))
+          : [...prev, updatedItem];
         try {
           localStorage.setItem('bryz_testimonials', JSON.stringify(next));
           window.dispatchEvent(new Event('bryz_testimonials_updated'));
@@ -501,24 +528,34 @@ export default function AdminDashboard() {
         return next;
       });
 
-      const res = await fetch('/api/testimonials', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({
-          name: testimonialName,
-          imageUrl,
-          rating: testimonialRating,
-          month: testimonialMonth,
-        }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        console.warn('API testimonial warning:', errData);
+      if (editingTestimonial) {
+        const res = await fetch('/api/testimonials', {
+          method: 'PUT',
+          headers: authHeaders(),
+          body: JSON.stringify(updatedItem),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('API update testimonial warning:', errData);
+        }
+        showToast('Testimoni berhasil diperbarui', 'success');
+      } else {
+        const res = await fetch('/api/testimonials', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(updatedItem),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('API testimonial warning:', errData);
+        }
+        showToast('Screenshot testimoni berhasil ditambahkan', 'success');
       }
-      showToast('Screenshot testimoni berhasil ditambahkan', 'success');
+
       setShowTestimonialModal(false);
+      setEditingTestimonial(null);
     } catch (err: any) {
-      showToast(err.message || 'Gagal mengunggah testimoni', 'error');
+      showToast(err.message || 'Gagal menyimpan testimoni', 'error');
     } finally {
       setSaving(false);
     }
@@ -1152,18 +1189,32 @@ export default function AdminDashboard() {
                           {'★'.repeat(t.rating)}
                         </div>
                       </div>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => deleteTestimonialHandler(t.id)}
-                        title="Hapus Screenshot"
-                        aria-label={`Hapus screenshot ${t.name}`}
-                        style={{ padding: '6px 10px' }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
+                      <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => openEditTestimonial(t)}
+                          title="Edit Testimoni"
+                          aria-label={`Edit testimoni ${t.name}`}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => deleteTestimonialHandler(t.id)}
+                          title="Hapus Screenshot"
+                          aria-label={`Hapus screenshot ${t.name}`}
+                          style={{ padding: '6px 10px' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1807,13 +1858,13 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ===================== MODAL: UPLOAD TESTIMONI ===================== */}
+      {/* ===================== MODAL: UPLOAD / EDIT TESTIMONI ===================== */}
       {showTestimonialModal && (
         <div className="modal-overlay" onClick={() => setShowTestimonialModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Unggah Screenshot Testimoni Baru
+                {editingTestimonial ? 'Edit Testimoni' : 'Unggah Screenshot Testimoni Baru'}
               </h2>
               <button
                 type="button"
@@ -1911,8 +1962,26 @@ export default function AdminDashboard() {
               </div>
             </fieldset>
 
+            {editingTestimonial && testimonialImageUrl && (
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <span className="form-label" style={{ display: 'block', marginBottom: '6px' }}>Screenshot Saat Ini</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-secondary)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <img
+                    src={testimonialImageUrl}
+                    alt="Screenshot saat ini"
+                    style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                  />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <span>Pilih file baru di bawah jika ingin mengganti gambar. Biarkan kosong jika ingin tetap menggunakan screenshot ini.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">File Gambar Screenshot Bukti Chat / ACC</label>
+              <label className="form-label">
+                {editingTestimonial ? 'Ganti File Gambar Screenshot (Opsional)' : 'File Gambar Screenshot Bukti Chat / ACC'}
+              </label>
               <input
                 type="file"
                 className="form-file-input"
@@ -1926,7 +1995,7 @@ export default function AdminDashboard() {
                 Batal
               </button>
               <button className="btn btn-primary btn-sm" onClick={saveTestimonial} disabled={saving}>
-                {saving ? 'Mengunggah...' : 'Upload Screenshot'}
+                {saving ? (editingTestimonial ? 'Menyimpan...' : 'Mengunggah...') : editingTestimonial ? 'Simpan Perubahan' : 'Upload Screenshot'}
               </button>
             </div>
           </div>

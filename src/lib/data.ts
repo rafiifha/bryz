@@ -493,6 +493,15 @@ export async function addTestimonial(testimonial: Omit<Testimonial, 'id' | 'orde
   return newTestimonial;
 }
 
+export async function updateTestimonial(id: string, updates: Partial<Testimonial>): Promise<Testimonial | null> {
+  const testimonials = await getTestimonials();
+  const index = testimonials.findIndex((t) => String(t.id) === String(id));
+  if (index === -1) return null;
+  testimonials[index] = { ...testimonials[index], ...updates };
+  await saveTestimonials(testimonials);
+  return testimonials[index];
+}
+
 export async function deleteTestimonial(id: string): Promise<boolean> {
   const testimonials = await getTestimonials();
   const filtered = testimonials.filter((t) => t.id !== id);
