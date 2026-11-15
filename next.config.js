@@ -5,6 +5,12 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
+      // Cloudinary (provider utama untuk gambar baru)
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      // Vercel Blob (dipertahankan agar gambar lama tetap tampil)
       {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',

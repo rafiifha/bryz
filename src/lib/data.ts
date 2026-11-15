@@ -2,7 +2,6 @@ import { Service, Testimonial, SiteConfig } from './types';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { put, list, del } from '@vercel/blob';
 
 // Deteksi environment serverless Vercel / Cloud
 const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION;
@@ -12,6 +11,9 @@ const DATA_DIR = isServerless
 
 // In-memory cache fallback saat proses serverless berjalan
 const globalMemoryCache: Record<string, any> = {};
+
+// Cache base URL Vercel Blob agar tidak perlu list() berulang
+let blobBaseUrl: string | null = null;
 
 // Default initial data
 export const defaultServices: Service[] = [
@@ -229,32 +231,114 @@ function ensureDataDir() {
   }
 }
 
-// Helpers for reading/writing with Vercel Blob support
-async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
+/**
+ * Konstruksi URL Blob secara deterministik dari base URL yang sudah diketahui.
+ * Menghindari panggilan list() yang dihitung Advanced Operation.
+ */
+function constructBlobUrl(key: string): string | null {
+  if (!blobBaseUrl) return null;
+  return `${blobBaseUrl}/db/${key}.json`;
+}
+
+/**
+ * Temukan base URL Blob dari blob yang sudah ada.
+ * Hanya dipanggil sekali (cold start) lalu di-cache.
+ */
+async function discoverBlobBaseUrl(): Promise<string | null> {
+  if (blobBaseUrl) return blobBaseUrl;
+
   const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  if (!hasBlob) return null;
+
+  try {
+    const { list } = await import('@vercel/blob');
+    const { blobs } = await list({ prefix: 'db/', limit: 1 });
+    if (blobs.length > 0) {
+      const url = blobs[0].url;
+      const dbIndex = url.indexOf('/db/');
+      if (dbIndex > 0) {
+        blobBaseUrl = url.substring(0, dbIndex);
+        return blobBaseUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('[Blob] Could not discover base URL:', err);
+  }
+  return null;
+}
+
+/**
+ * Baca data JSON. Urutan prioritas:
+ * 1. In-memory cache (zero cost)
+ * 2. Fetch URL Blob deterministik (zero Blob API cost, hanya HTTP fetch)
+ * 3. Discover base URL via list() (satu kali per cold start)
+ * 4. File lokal (project dir / tmp)
+ * 5. Default value
+ */
+async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
+  // 1. Memory cache (tercepat, zero cost)
+  if (globalMemoryCache[key] !== undefined) {
+    return globalMemoryCache[key] as T;
+  }
+
+  const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+
   if (hasBlob) {
-    try {
-      const { blobs } = await list({ prefix: `db/${key}` });
-      if (blobs.length > 0) {
-        const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-        const res = await fetch(sorted[0].url, { cache: 'no-store' });
+    // 2. Coba fetch URL deterministik (tanpa panggilan Blob API)
+    const knownUrl = constructBlobUrl(key);
+    if (knownUrl) {
+      try {
+        const res = await fetch(knownUrl, { cache: 'no-store' });
         if (res.ok) {
           const val = (await res.json()) as T;
           globalMemoryCache[key] = val;
           return val;
         }
+      } catch {}
+    }
+
+    // 3. Cold start: discover base URL lalu coba lagi
+    if (!blobBaseUrl) {
+      const baseUrl = await discoverBlobBaseUrl();
+      if (baseUrl) {
+        const discoveredUrl = `${baseUrl}/db/${key}.json`;
+        try {
+          const res = await fetch(discoveredUrl, { cache: 'no-store' });
+          if (res.ok) {
+            const val = (await res.json()) as T;
+            globalMemoryCache[key] = val;
+            return val;
+          }
+        } catch {}
       }
-    } catch (err) {
-      console.warn(`[Vercel Blob] Read warning for ${key}:`, err);
+
+      // 3b. Jika base URL tidak bisa ditemukan dari prefix 'db/',
+      //     coba list() spesifik untuk key ini (legacy data dengan addRandomSuffix)
+      try {
+        const { list } = await import('@vercel/blob');
+        const { blobs } = await list({ prefix: `db/${key}` });
+        if (blobs.length > 0) {
+          const sorted = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+          // Simpan base URL untuk pemakaian selanjutnya
+          const url = sorted[0].url;
+          const dbIndex = url.indexOf('/db/');
+          if (dbIndex > 0) {
+            blobBaseUrl = url.substring(0, dbIndex);
+          }
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const val = (await res.json()) as T;
+            globalMemoryCache[key] = val;
+            return val;
+          }
+        }
+      } catch (err) {
+        console.warn(`[Blob] Read warning for ${key}:`, err);
+      }
     }
   }
 
-  // 2. Memory cache check
-  if (globalMemoryCache[key] !== undefined) {
-    return globalMemoryCache[key] as T;
-  }
-
-  // 3. Local fallback - Check project directory first, then DATA_DIR
+  // 4. Local fallback - Check project directory first, then DATA_DIR
   try {
     const projectPath = path.join(process.cwd(), 'data', `${key}.json`);
     if (fs.existsSync(projectPath)) {
@@ -279,6 +363,12 @@ async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   return defaultValue;
 }
 
+/**
+ * Simpan data JSON. Menggunakan put() tanpa addRandomSuffix
+ * sehingga URL deterministik dan tidak perlu list() + del().
+ *
+ * Operasi Blob yang digunakan: hanya put() (Standard, bukan Advanced).
+ */
 async function writeBlobJson<T>(key: string, data: T): Promise<void> {
   // Simpan ke in-memory cache
   globalMemoryCache[key] = data;
@@ -301,25 +391,25 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
     fs.writeFileSync(filePath, jsonStr);
   } catch {}
 
-  // 3. Try Vercel Blob (supports token or OIDC BLOB_STORE_ID)
+  // 3. Simpan ke Vercel Blob (tanpa addRandomSuffix = URL deterministik)
+  //    Hanya menggunakan put() yang merupakan Standard Operation.
+  //    TIDAK memanggil list() atau del() (Advanced Operations).
   const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
   if (hasBlob) {
     try {
+      const { put } = await import('@vercel/blob');
       const newBlob = await put(`db/${key}.json`, jsonStr, {
         access: 'public',
-        addRandomSuffix: true,
+        addRandomSuffix: false,
       });
 
-      // Hapus blob versi lama agar storage selalu bersih dan rapi
-      try {
-        const { blobs } = await list({ prefix: `db/${key}` });
-        const oldBlobs = blobs.filter((b) => b.url !== newBlob.url);
-        if (oldBlobs.length > 0) {
-          await del(oldBlobs.map((b) => b.url));
-        }
-      } catch {}
+      // Cache base URL dari hasil put() untuk pembacaan selanjutnya
+      const dbIndex = newBlob.url.indexOf('/db/');
+      if (dbIndex > 0) {
+        blobBaseUrl = newBlob.url.substring(0, dbIndex);
+      }
     } catch (err) {
-      console.warn(`[Vercel Blob] Write warning for ${key}:`, err);
+      console.warn(`[Blob] Write warning for ${key}:`, err);
     }
   }
 }

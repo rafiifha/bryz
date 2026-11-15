@@ -27,3 +27,6 @@ next-env.d.ts
 
 # uploads
 /public/uploads/
+
+# data backups
+data/backup_*/

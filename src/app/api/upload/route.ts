@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
-import { put } from '@vercel/blob';
+import { uploadImage, isCloudinaryConfigured } from '@/lib/cloudinary';
 import path from 'path';
 import fs from 'fs';
 
@@ -23,10 +23,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // 1. If Vercel Blob is configured (token or OIDC BLOB_STORE_ID), upload directly to Vercel Blob
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // 1. Cloudinary (prioritas utama jika dikonfigurasi)
+    if (isCloudinaryConfigured()) {
+      try {
+        const url = await uploadImage(buffer, 'bryz-support');
+        return NextResponse.json({ url });
+      } catch (err) {
+        console.warn('Cloudinary upload failed, falling back:', err);
+      }
+    }
+
+    // 2. Vercel Blob fallback (jika masih terkonfigurasi dan Cloudinary belum siap)
     const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
     if (hasBlob) {
       try {
+        const { put } = await import('@vercel/blob');
         const ext = path.extname(file.name) || '.png';
         const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}${ext}`;
         const blob = await put(`bryz-support/${cleanName}`, file, {
@@ -34,39 +48,29 @@ export async function POST(request: Request) {
         });
         return NextResponse.json({ url: blob.url });
       } catch (err) {
-        console.warn('Vercel Blob upload failed, falling back to local/base64 storage:', err);
+        console.warn('Vercel Blob upload failed, falling back:', err);
       }
     }
 
-    // 2. Serverless Vercel fallback (Read-only filesystem)
+    // 3. Serverless fallback (Read-only filesystem) -> Base64
     const isServerless = process.env.VERCEL === '1' || !!process.env.NOW_REGION || !!process.env.AWS_REGION || process.env.NODE_ENV === 'production';
     if (isServerless) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
       const mimeType = file.type || 'image/png';
       const base64 = buffer.toString('base64');
       const dataUrl = `data:${mimeType};base64,${base64}`;
       return NextResponse.json({ url: dataUrl });
     }
 
-    // 3. Local filesystem storage fallback (development environment)
+    // 4. Local filesystem storage (development)
     try {
       ensureUploadDir();
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
       const ext = path.extname(file.name) || '.png';
       const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
       const filepath = path.join(UPLOAD_DIR, filename);
-
       fs.writeFileSync(filepath, buffer);
-
       const url = `/uploads/${filename}`;
       return NextResponse.json({ url });
     } catch {
-      // Jika lokal FS pun tidak bisa diakses, gunakan Base64
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
       const mimeType = file.type || 'image/png';
       const base64 = buffer.toString('base64');
       return NextResponse.json({ url: `data:${mimeType};base64,${base64}` });

@@ -764,7 +764,7 @@ export default function AdminDashboard() {
                 display: 'inline-block',
               }} />
               <span>
-                {blobConnected === true ? 'Vercel Blob (Aktif)' : blobConnected === false ? 'Penyimpanan Lokal' : 'Memeriksa...'}
+                {blobConnected === true ? 'Cloud Storage (Aktif)' : blobConnected === false ? 'Penyimpanan Lokal' : 'Memeriksa...'}
               </span>
             </div>
             <span style={{ fontSize: '0.78rem', color: blobConnected === true ? 'var(--success)' : 'var(--text-muted)' }}>
@@ -773,7 +773,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Banner Status Vercel Blob */}
+        {/* Banner Status Cloud Storage */}
         {blobConnected === false && (
           <div style={{
             background: 'rgba(234, 88, 12, 0.08)',
@@ -787,7 +787,7 @@ export default function AdminDashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ea580c', fontWeight: 700, fontSize: '0.95rem' }}>
-                <span>⚠️ Vercel Blob Belum Terkoneksi ke Project Anda</span>
+                <span>⚠️ Cloud Storage Belum Terkoneksi ke Project Anda</span>
               </div>
               <button
                 type="button"
@@ -810,9 +810,9 @@ export default function AdminDashboard() {
               Data Anda saat ini diamankan di memori browser ini. Agar perubahan tersimpan <strong>permanen di Cloud untuk SEMUA pengunjung di seluruh dunia</strong>:
             </p>
             <ol style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', margin: 0, paddingLeft: '20px', lineHeight: 1.6 }}>
-              <li>Buka <strong>Vercel Dashboard</strong> → Pilih project <strong>bryz</strong>.</li>
-              <li>Masuk ke tab <strong>Storage</strong> → klik Blob store yang sudah dibuat.</li>
-              <li>Klik <strong>Connect Project</strong> dan pilih project <em>bryz</em>.</li>
+              <li>Buat akun gratis di <strong>cloudinary.com</strong> dan catat Cloud Name, API Key, API Secret.</li>
+              <li>Buka <strong>Vercel Dashboard</strong> → Pilih project <strong>bryz</strong> → tab <strong>Settings</strong> → <strong>Environment Variables</strong>.</li>
+              <li>Tambahkan: <strong>CLOUDINARY_CLOUD_NAME</strong>, <strong>CLOUDINARY_API_KEY</strong>, <strong>CLOUDINARY_API_SECRET</strong>.</li>
               <li>Masuk ke tab <strong>Deployments</strong> → Klik titik tiga (...) di deployment teratas → Pilih <strong>Redeploy</strong>.</li>
             </ol>
           </div>
@@ -832,7 +832,7 @@ export default function AdminDashboard() {
             fontSize: '0.88rem',
             fontWeight: 600,
           }}>
-            <span>✅ Vercel Blob Terhubung Permanen. Semua perubahan otomatis tersimpan di Cloud Database.</span>
+            <span>✅ Cloud Storage Terhubung Permanen. Semua perubahan otomatis tersimpan di Cloud Database.</span>
           </div>
         )}
 

@@ -1,30 +1,26 @@
 import { NextResponse } from 'next/server';
-import { list } from '@vercel/blob';
+import { isCloudinaryConfigured } from '@/lib/cloudinary';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const hasEnv = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
-  let blobConnected = hasEnv;
-  let errorMsg: string | null = null;
+  // Cek Vercel Blob (hanya environment variable, tanpa memanggil list())
+  const hasBlobEnv = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 
-  if (hasEnv) {
-    try {
-      await list({ limit: 1 });
-      blobConnected = true;
-    } catch (err: any) {
-      blobConnected = false;
-      errorMsg = err.message || 'Error listing blobs';
-    }
-  }
+  // Cek Cloudinary
+  const cloudinaryReady = isCloudinaryConfigured();
+
+  // Storage dianggap connected jika salah satu provider aktif
+  const blobConnected = hasBlobEnv || cloudinaryReady;
 
   return NextResponse.json({
     blobConnected,
-    hasEnv,
+    hasEnv: hasBlobEnv,
     hasStoreId: Boolean(process.env.BLOB_STORE_ID),
     hasToken: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    cloudinaryReady,
     isVercel: process.env.VERCEL === '1',
-    error: errorMsg,
+    storageProvider: cloudinaryReady ? 'cloudinary' : hasBlobEnv ? 'vercel-blob' : 'local',
     timestamp: new Date().toISOString(),
   });
 }
