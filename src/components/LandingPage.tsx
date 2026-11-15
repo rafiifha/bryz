@@ -372,13 +372,13 @@ export default function LandingPage({
             <div className="hero-reassurance">
               <span className="reassurance-item">
                 <span className="reassurance" />
-                <span>• Konsultasi Gratis</span>
+                <span>Konsultasi Gratis</span>
               </span>
               <span className="reassurance-item">
-                <span>• Identitas &amp; Data 100% Aman</span>
+                <span>Identitas &amp; Data 100% Aman</span>
               </span>
               <span className="reassurance-item">
-                <span>• Admin Fast Response</span>
+                <span>Admin Fast Response</span>
               </span>
             </div>
           </div>
