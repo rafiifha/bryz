@@ -1,4 +1,5 @@
 import { Service, Testimonial, SiteConfig } from './types';
+import { uploadRawJson, getRawJson, isCloudinaryConfigured } from './cloudinary';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -269,16 +270,30 @@ async function discoverBlobBaseUrl(): Promise<string | null> {
 
 /**
  * Baca data JSON. Urutan prioritas:
- * 1. In-memory cache (zero cost)
- * 2. Fetch URL Blob deterministik (zero Blob API cost, hanya HTTP fetch)
- * 3. Discover base URL via list() (satu kali per cold start)
- * 4. File lokal (project dir / tmp)
- * 5. Default value
+ * 1. In-memory cache (zero cost, instan)
+ * 2. Cloudinary Raw Storage (Database Cloud Permanen, bebas kuota Vercel Blob)
+ * 3. Fetch URL Blob deterministik (zero Blob API cost, hanya HTTP fetch)
+ * 4. Discover base URL via list() (satu kali per cold start)
+ * 5. File lokal (project dir / tmp)
+ * 6. Default value
  */
 async function readBlobJson<T>(key: string, defaultValue: T): Promise<T> {
   // 1. Memory cache (tercepat, zero cost)
   if (globalMemoryCache[key] !== undefined) {
     return globalMemoryCache[key] as T;
+  }
+
+  // 2. Cloudinary Raw Storage (Database Cloud Utama)
+  if (isCloudinaryConfigured()) {
+    try {
+      const cloudData = await getRawJson<T>(key);
+      if (cloudData !== null) {
+        globalMemoryCache[key] = cloudData;
+        return cloudData;
+      }
+    } catch (err) {
+      console.warn(`[Cloudinary DB] Read warning for ${key}:`, err);
+    }
   }
 
   const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
@@ -391,9 +406,16 @@ async function writeBlobJson<T>(key: string, data: T): Promise<void> {
     fs.writeFileSync(filePath, jsonStr);
   } catch {}
 
-  // 3. Simpan ke Vercel Blob (tanpa addRandomSuffix = URL deterministik)
-  //    Hanya menggunakan put() yang merupakan Standard Operation.
-  //    TIDAK memanggil list() atau del() (Advanced Operations).
+  // 3. Simpan ke Cloudinary Raw Storage (Database Cloud Utama, Permanen & Bebas Kuota)
+  if (isCloudinaryConfigured()) {
+    try {
+      await uploadRawJson(key, jsonStr);
+    } catch (err) {
+      console.warn(`[Cloudinary DB] Write warning for ${key}:`, err);
+    }
+  }
+
+  // 4. Simpan ke Vercel Blob (Legacy fallback jika ada token)
   const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
   if (hasBlob) {
     try {
