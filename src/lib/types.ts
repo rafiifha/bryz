@@ -18,6 +18,8 @@ export interface Testimonial {
   imageUrl: string;
   rating: number;
   order: number;
+  /** Month the work was done, "YYYY-MM". */
+  month?: string;
 }
 
 export interface FaqItem {

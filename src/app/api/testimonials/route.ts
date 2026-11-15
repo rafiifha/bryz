@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getTestimonials, addTestimonial, deleteTestimonial } from '@/lib/data';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { isValidMonth } from '@/lib/testimonialMonth';
 
 export async function GET() {
   const testimonials = await getTestimonials();
@@ -13,16 +14,20 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, imageUrl, rating } = body;
+    const { name, imageUrl, rating, month } = body;
 
     if (!name || !imageUrl) {
       return NextResponse.json({ error: 'Nama dan screenshot testimoni wajib diisi' }, { status: 400 });
+    }
+    if (!isValidMonth(month)) {
+      return NextResponse.json({ error: 'Bulan testimoni wajib diisi (format YYYY-MM)' }, { status: 400 });
     }
 
     const testimonial = await addTestimonial({
       name,
       imageUrl,
       rating: rating || 5,
+      month,
     });
 
     revalidatePath('/');

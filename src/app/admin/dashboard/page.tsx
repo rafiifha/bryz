@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Service, Testimonial, SiteConfig } from '@/lib/types';
 import ThemeToggle from '@/components/ThemeToggle';
+import { MONTH_NAMES_ID, currentMonth, groupTestimonialsByMonth } from '@/lib/testimonialMonth';
 
 type Tab = 'services' | 'testimonials' | 'settings';
 
@@ -169,6 +170,7 @@ export default function AdminDashboard() {
   const [testimonialName, setTestimonialName] = useState('');
   const [testimonialRating, setTestimonialRating] = useState(5);
   const [testimonialImage, setTestimonialImage] = useState<File | null>(null);
+  const [testimonialMonth, setTestimonialMonth] = useState(currentMonth());
 
   // QRIS form states
   const [qrisFile, setQrisFile] = useState<File | null>(null);
@@ -465,6 +467,7 @@ export default function AdminDashboard() {
     setTestimonialName('');
     setTestimonialRating(5);
     setTestimonialImage(null);
+    setTestimonialMonth(currentMonth());
     setShowTestimonialModal(true);
   };
 
@@ -483,6 +486,7 @@ export default function AdminDashboard() {
         imageUrl,
         rating: testimonialRating,
         order: testimonials.length + 1,
+        month: testimonialMonth,
       };
       setTestimonials((prev) => {
         const next = [...prev, newTestimonial];
@@ -500,6 +504,7 @@ export default function AdminDashboard() {
           name: testimonialName,
           imageUrl,
           rating: testimonialRating,
+          month: testimonialMonth,
         }),
       });
       if (!res.ok) {
@@ -1057,8 +1062,17 @@ export default function AdminDashboard() {
                 </button>
               </div>
             ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              {groupTestimonialsByMonth(testimonials).map((group) => (
+              <section key={group.month} aria-label={`Testimoni ${group.label}`}>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 12px', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  {group.label}
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                    {group.items.length} screenshot
+                  </span>
+                </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '20px' }}>
-                {testimonials.map((t) => (
+                {group.items.map((t) => (
                   <div key={t.id} style={{
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border-color)',
@@ -1091,6 +1105,7 @@ export default function AdminDashboard() {
                         className="btn btn-danger btn-sm"
                         onClick={() => deleteTestimonialHandler(t.id)}
                         title="Hapus Screenshot"
+                        aria-label={`Hapus screenshot ${t.name}`}
                         style={{ padding: '6px 10px' }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1101,6 +1116,9 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+              </section>
+              ))}
               </div>
             )}
           </div>
@@ -1810,6 +1828,37 @@ export default function AdminDashboard() {
                 ))}
               </div>
             </div>
+
+            <fieldset className="form-group" style={{ border: 'none', padding: 0, margin: '0 0 20px' }}>
+              <legend className="form-label">Bulan Pengerjaan</legend>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <label style={{ flex: '1 1 60%' }}>
+                  <span className="sr-only">Bulan</span>
+                  <select
+                    className="form-select"
+                    value={testimonialMonth.split('-')[1]}
+                    onChange={(e) => setTestimonialMonth(`${testimonialMonth.split('-')[0]}-${e.target.value}`)}
+                  >
+                    {MONTH_NAMES_ID.map((name, i) => {
+                      const value = String(i + 1).padStart(2, '0');
+                      return <option key={value} value={value}>{name}</option>;
+                    })}
+                  </select>
+                </label>
+                <label style={{ flex: '1 1 40%' }}>
+                  <span className="sr-only">Tahun</span>
+                  <select
+                    className="form-select"
+                    value={testimonialMonth.split('-')[0]}
+                    onChange={(e) => setTestimonialMonth(`${e.target.value}-${testimonialMonth.split('-')[1]}`)}
+                  >
+                    {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => String(new Date().getFullYear() - i)).map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </fieldset>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">File Gambar Screenshot Bukti Chat / ACC</label>

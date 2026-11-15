@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Service, Testimonial, SiteConfig } from '@/lib/types';
+import { groupTestimonialsByMonth } from '@/lib/testimonialMonth';
 import ThemeToggle from './ThemeToggle';
 
 interface LandingPageProps {
@@ -24,6 +25,8 @@ export default function LandingPage({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  // Every month starts collapsed; only one month is open at a time.
+  const [openTestimonialMonth, setOpenTestimonialMonth] = useState<string | null>(null);
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
 
   useEffect(() => {
@@ -757,11 +760,44 @@ export default function LandingPage({
           <div className="container">
             <h2 className="section-title">Screenshot Bukti Chat &amp; Hasil ACC Klien</h2>
             <p className="section-subtitle">
-              Tangkapan layar asli dari klien yang sudah kami bantu menyelesaikan tugas akademiknya. Klik gambar untuk memperbesar.
+              Tangkapan layar asli dari klien yang sudah kami bantu menyelesaikan tugas akademiknya. Pilih bulan untuk melihat buktinya.
             </p>
 
-            <div className="testimonials-grid">
-              {activeTestimonials.sort((a, b) => a.order - b.order).map((t) => (
+            <div className="testimonial-months">
+            {groupTestimonialsByMonth(activeTestimonials).map((group) => {
+              const isOpen = openTestimonialMonth === group.month;
+              const panelId = `testimoni-panel-${group.month}`;
+              return (
+            <section key={group.month} className={`testimonial-month${isOpen ? ' is-open' : ''}`}>
+              <h3 className="testimonial-month-heading">
+                <button
+                  type="button"
+                  className="testimonial-month-toggle"
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  onClick={() => setOpenTestimonialMonth(isOpen ? null : group.month)}
+                >
+                  <img
+                    src={group.items[0].imageUrl}
+                    alt=""
+                    className="testimonial-month-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span className="testimonial-month-text">
+                    <span className="testimonial-month-label">{group.label}</span>
+                    <span className="testimonial-month-count">{group.items.length} bukti chat &amp; ACC</span>
+                  </span>
+                  <span className="testimonial-month-action">
+                    {isOpen ? 'Tutup' : 'Lihat bukti'}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </button>
+              </h3>
+            <div className="testimonials-grid testimonial-month-panel" id={panelId} hidden={!isOpen}>
+              {group.items.map((t) => (
                 <button
                   type="button"
                   key={t.id}
@@ -808,6 +844,10 @@ export default function LandingPage({
                   </div>
                 </button>
               ))}
+            </div>
+            </section>
+              );
+            })}
             </div>
           </div>
         </section>

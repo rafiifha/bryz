@@ -152,6 +152,7 @@ export const defaultTestimonials: Testimonial[] = [
     imageUrl: '/uploads/1793371889528-17jpd6.jpeg',
     rating: 5,
     order: 1,
+    month: '2026-11',
   },
   {
     id: '2',
@@ -159,6 +160,7 @@ export const defaultTestimonials: Testimonial[] = [
     imageUrl: '/uploads/1793372785946-kpovb6.jpeg',
     rating: 5,
     order: 2,
+    month: '2026-11',
   },
   {
     id: '3',
@@ -166,6 +168,7 @@ export const defaultTestimonials: Testimonial[] = [
     imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
     rating: 5,
     order: 3,
+    month: '2026-11',
   },
   {
     id: '4',
@@ -173,6 +176,7 @@ export const defaultTestimonials: Testimonial[] = [
     imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80',
     rating: 5,
     order: 4,
+    month: '2026-11',
   },
 ];
 

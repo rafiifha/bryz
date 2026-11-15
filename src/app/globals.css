@@ -1382,6 +1382,161 @@ p {
   text-transform: uppercase;
 }
 
+/* Month banners: collapsed by default so the section stays short.
+   The cover is the month's own first screenshot, dimmed by a solid
+   navy layer so the white label keeps its contrast over any image. */
+.testimonial-months {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.testimonial-month-heading {
+  margin: 0;
+  font-size: inherit;
+  letter-spacing: normal;
+}
+
+.testimonial-month-toggle {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 132px;
+  padding: 22px 24px;
+  margin: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--c-deep-navy);
+  color: #F8FAFC;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  isolation: isolate;
+  transition: border-color var(--transition-base);
+}
+
+.testimonial-month-toggle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(11, 19, 43, 0.78);
+  transition: background-color var(--transition-base);
+}
+
+.testimonial-month-toggle:hover::after {
+  background: rgba(11, 19, 43, 0.68);
+}
+
+.testimonial-month-toggle:hover {
+  border-color: var(--c-royal-blue);
+}
+
+.testimonial-month-toggle:active {
+  transform: scale(0.995);
+}
+
+.testimonial-month-toggle:focus-visible {
+  outline: 2px solid var(--c-royal-blue);
+  outline-offset: 3px;
+}
+
+.testimonial-month-cover {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  /* Blur keeps chat text from competing with the month label. */
+  filter: blur(3px);
+  transform: scale(1.08);
+}
+
+.testimonial-month-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.testimonial-month-label {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.testimonial-month-count {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #CBD5E1;
+}
+
+.testimonial-month-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(248, 250, 252, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.testimonial-month-action svg {
+  transition: transform var(--transition-base);
+}
+
+.testimonial-month.is-open .testimonial-month-action svg {
+  transform: rotate(180deg);
+}
+
+.testimonial-month.is-open .testimonial-month-toggle {
+  border-color: var(--c-royal-blue);
+}
+
+.testimonial-month-panel {
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.testimonial-month-panel[hidden] {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .testimonial-month-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 120px;
+    padding: 18px;
+  }
+
+  .testimonial-month-label {
+    font-size: 1.35rem;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .testimonials-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
