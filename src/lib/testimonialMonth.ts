@@ -32,7 +32,7 @@ export interface TestimonialMonthGroup {
   items: Testimonial[];
 }
 
-// Newest month first; inside a month, keep the admin's order.
+// Earliest month first; inside a month, keep the admin's order.
 export function groupTestimonialsByMonth(list: Testimonial[]): TestimonialMonthGroup[] {
   const groups = new Map<string, Testimonial[]>();
   for (const t of list) {
@@ -42,7 +42,7 @@ export function groupTestimonialsByMonth(list: Testimonial[]): TestimonialMonthG
     else groups.set(key, [t]);
   }
   return [...groups.entries()]
-    .sort(([a], [b]) => b.localeCompare(a))
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, items]) => ({
       month,
       label: formatMonthLabel(month),
