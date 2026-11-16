@@ -29,6 +29,7 @@ export interface FaqItem {
 
 export interface SiteConfig {
   whatsappNumber: string;
+  whatsappNumber2?: string;
   heroEyebrow?: string;
   heroTitle: string;
   heroDescription: string;

@@ -185,6 +185,7 @@ export const defaultTestimonials: Testimonial[] = [
 
 export const defaultConfig: SiteConfig = {
   whatsappNumber: '6285861950414',
+  whatsappNumber2: '6281395866659',
   heroEyebrow: 'Bimbingan & Bantu Tugas Akademik Terpercaya',
   heroTitle: 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
   heroDescription: 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
@@ -534,7 +535,13 @@ export async function deleteTestimonial(id: string): Promise<boolean> {
 
 // ================= Config API =================
 export async function getConfig(): Promise<SiteConfig> {
-  return await readBlobJson<SiteConfig>('config', defaultConfig);
+  const conf = await readBlobJson<SiteConfig>('config', defaultConfig);
+  return {
+    ...defaultConfig,
+    ...conf,
+    whatsappNumber: conf.whatsappNumber || defaultConfig.whatsappNumber,
+    whatsappNumber2: conf.whatsappNumber2 || defaultConfig.whatsappNumber2 || '6281395866659',
+  };
 }
 
 export async function saveConfig(config: SiteConfig): Promise<void> {

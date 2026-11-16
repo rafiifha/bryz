@@ -257,6 +257,7 @@ export default function AdminDashboard() {
 
         const mergedConf: SiteConfig = {
           whatsappNumber: localConf?.whatsappNumber || confData.whatsappNumber || '6285861950414',
+          whatsappNumber2: localConf?.whatsappNumber2 || confData.whatsappNumber2 || '6281395866659',
           heroEyebrow: localConf?.heroEyebrow || confData.heroEyebrow || 'Bimbingan & Bantu Tugas Akademik Terpercaya',
           heroTitle: localConf?.heroTitle || confData.heroTitle || 'Bantu Tugas Sekolah, Kuliah & Riset Akademik Sampai Tuntas',
           heroDescription: localConf?.heroDescription || confData.heroDescription || 'Pusing mikirin tugas sekolah, tugas kuliah, makalah, skripsi, atau olah data yang mepet deadline? Tim Bryz Academic siap bantu dari awal sampai tuntas. Dikerjakan oleh fresh graduate PTN top 3, rapi, bebas plagiasi (Turnitin aman), dan bergaransi revisi.',
@@ -784,11 +785,16 @@ export default function AdminDashboard() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               WhatsApp Gateway
             </span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '6px', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '6px', fontFamily: 'monospace' }}>
               +{config?.whatsappNumber || '628...'}
             </div>
+            {config?.whatsappNumber2 ? (
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: '2px' }}>
+                Admin 2: +{config.whatsappNumber2}
+              </div>
+            ) : null}
             <span style={{ fontSize: '0.78rem', color: 'var(--success)', fontWeight: 500 }}>
-              Terkoneksi ke tombol web
+              {config?.whatsappNumber2 ? '2 Admin aktif di web' : 'Terkoneksi ke tombol web'}
             </span>
           </div>
 
@@ -1371,29 +1377,34 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Nomor WhatsApp Admin</h3>
-                  <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>Semua tombol pemesanan di web mengarah ke nomor ini.</p>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                    Konfigurasi nomor WhatsApp Admin 1 dan Admin 2 untuk pemesanan &amp; konsultasi di website.
+                  </p>
                 </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nomor WhatsApp (Gunakan kode negara, contoh: 6281234567890)</label>
+              {/* Input Admin 1 */}
+              <div className="form-group" style={{ marginBottom: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>
+                  Nomor WhatsApp Admin 1 (Utama)
+                </label>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <input
                     type="text"
                     className="form-input"
                     value={config.whatsappNumber}
                     onChange={(e) => setConfig({ ...config, whatsappNumber: e.target.value.replace(/[^0-9]/g, '') })}
-                    placeholder="6281234567890"
+                    placeholder="6285861950414"
                     style={{ flex: 1, fontFamily: 'monospace', fontSize: '1rem' }}
                   />
                   <a
-                    href={`https://wa.me/${config.whatsappNumber}?text=Tes+koneksi+admin+Bryz`}
+                    href={`https://wa.me/${config.whatsappNumber}?text=Tes+koneksi+admin+1+Bryz`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-secondary btn-sm"
-                    title="Cek apakah tautan WhatsApp berfungsi"
+                    title="Cek apakah tautan WhatsApp Admin 1 berfungsi"
                   >
-                    <span>Uji Kirim Chat</span>
+                    <span>Uji Chat Admin 1</span>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                       <polyline points="15 3 21 3 21 9" />
@@ -1401,6 +1412,41 @@ export default function AdminDashboard() {
                     </svg>
                   </a>
                 </div>
+              </div>
+
+              {/* Input Admin 2 */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>
+                  Nomor WhatsApp Admin 2 (Cadangan / Paralel)
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={config.whatsappNumber2 || ''}
+                    onChange={(e) => setConfig({ ...config, whatsappNumber2: e.target.value.replace(/[^0-9]/g, '') })}
+                    placeholder="6281395866659"
+                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '1rem' }}
+                  />
+                  <a
+                    href={`https://wa.me/${config.whatsappNumber2 || ''}?text=Tes+koneksi+admin+2+Bryz`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary btn-sm"
+                    title="Cek apakah tautan WhatsApp Admin 2 berfungsi"
+                    style={{ opacity: config.whatsappNumber2 ? 1 : 0.5, pointerEvents: config.whatsappNumber2 ? 'auto' : 'none' }}
+                  >
+                    <span>Uji Chat Admin 2</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                </div>
+                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  Jika nomor Admin 2 diisi, pengunjung web akan diberikan pilihan untuk menghubungi Admin 1 atau Admin 2 saat mengeklik tombol konsultasi.
+                </span>
               </div>
             </div>
 

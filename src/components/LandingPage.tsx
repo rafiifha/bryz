@@ -18,7 +18,11 @@ export default function LandingPage({
 }: LandingPageProps) {
   const [services, setServices] = useState<Service[]>(initialServices);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
-  const [config, setConfig] = useState<SiteConfig>(initialConfig);
+  const [config, setConfig] = useState<SiteConfig>({
+    ...initialConfig,
+    whatsappNumber: initialConfig?.whatsappNumber || '6285861950414',
+    whatsappNumber2: initialConfig?.whatsappNumber2 || '6281395866659',
+  });
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,6 +33,8 @@ export default function LandingPage({
   // Every month starts collapsed; only one month is open at a time.
   const [openTestimonialMonth, setOpenTestimonialMonth] = useState<string | null>(null);
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
+  const [showWaSelector, setShowWaSelector] = useState<boolean>(false);
+  const [pendingWaText, setPendingWaText] = useState<string>('');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -43,6 +49,7 @@ export default function LandingPage({
         setShowQrisModal(false);
         setPreviewImage(null);
         setMobileMenuOpen(false);
+        setShowWaSelector(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -59,7 +66,13 @@ export default function LandingPage({
     try {
       const localConf = localStorage.getItem('bryz_site_config');
       if (localConf) {
-        setConfig(JSON.parse(localConf));
+        const parsed = JSON.parse(localConf);
+        setConfig((prev) => ({
+          ...prev,
+          ...parsed,
+          whatsappNumber: parsed.whatsappNumber || prev.whatsappNumber || '6285861950414',
+          whatsappNumber2: parsed.whatsappNumber2 || prev.whatsappNumber2 || '6281395866659',
+        }));
         hasLocalConfig = true;
       }
       const localTest = localStorage.getItem('bryz_testimonials');
@@ -128,17 +141,23 @@ export default function LandingPage({
           setTestimonials(t);
         }
         if (c && typeof c === 'object') {
+          const cleanConfig: SiteConfig = {
+            ...c,
+            whatsappNumber: c.whatsappNumber || '6285861950414',
+            whatsappNumber2: c.whatsappNumber2 || '6281395866659',
+          };
           if (isBlobActive) {
-            setConfig(c);
-            try { localStorage.setItem('bryz_site_config', JSON.stringify(c)); } catch {}
+            setConfig(cleanConfig);
+            try { localStorage.setItem('bryz_site_config', JSON.stringify(cleanConfig)); } catch {}
           } else {
             setConfig((prev) => {
               const updated: SiteConfig = {
-                ...c,
+                ...cleanConfig,
                 ...prev, // Data yang diedit di admin lokal tidak tertimpa default server
-                logoImageUrl: prev.logoImageUrl || c.logoImageUrl,
-                qrisImageUrl: prev.qrisImageUrl || c.qrisImageUrl,
-                whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : (c.whatsappNumber || prev.whatsappNumber),
+                logoImageUrl: prev.logoImageUrl || cleanConfig.logoImageUrl,
+                qrisImageUrl: prev.qrisImageUrl || cleanConfig.qrisImageUrl,
+                whatsappNumber: (hasLocalConfig && prev.whatsappNumber) ? prev.whatsappNumber : cleanConfig.whatsappNumber,
+                whatsappNumber2: (hasLocalConfig && prev.whatsappNumber2) ? prev.whatsappNumber2 : cleanConfig.whatsappNumber2,
               };
               try { localStorage.setItem('bryz_site_config', JSON.stringify(updated)); } catch {}
               return updated;
@@ -156,14 +175,39 @@ export default function LandingPage({
     };
   }, []);
 
+  const waNumber1 = config.whatsappNumber || '6285861950414';
+  const waNumber2 = config.whatsappNumber2 || '6281395866659';
+  const hasSecondWa = !!(waNumber2 && waNumber2.length >= 10);
+
+  const buildWaUrl = (number: string, text: string) =>
+    `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+
+  const defaultWaText = 'Halo Admin Bryz Academic Support, saya ingin konsultasi pengerjaan tugas akademik saya. Mohon infonya ya!';
+  const waLink1 = buildWaUrl(waNumber1, defaultWaText);
+  const waLink2 = buildWaUrl(waNumber2, defaultWaText);
+
   const getWaLink = (serviceName?: string) => {
     const text = serviceName
       ? `Halo Admin Bryz Academic Support, saya ingin konsultasi pengerjaan *${serviceName}*. Boleh info estimasi pengerjaan, syarat, dan harganya?`
-      : 'Halo Admin Bryz Academic Support, saya ingin konsultasi pengerjaan tugas akademik saya. Mohon infonya ya!';
-    return `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(text)}`;
+      : defaultWaText;
+    return buildWaUrl(waNumber1, text);
   };
 
-  const defaultWaLink = getWaLink();
+  /** Ketika ada 2 nomor WA, buka selector. Kalau cuma 1, langsung buka WA. */
+  const handleWaClick = (e: React.MouseEvent, text?: string) => {
+    if (!hasSecondWa) return; // biarkan <a> berjalan biasa
+    e.preventDefault();
+    const waText = text || defaultWaText;
+    setPendingWaText(waText);
+    setShowWaSelector(true);
+  };
+
+  const openWa = (number: string) => {
+    window.open(buildWaUrl(number, pendingWaText || defaultWaText), '_blank', 'noopener,noreferrer');
+    setShowWaSelector(false);
+  };
+
+  const defaultWaLink = waLink1;
 
   const getCategoryFromService = (name: string): string => {
     const lower = name.toLowerCase();
@@ -312,21 +356,39 @@ export default function LandingPage({
             </ul>
           </nav>
 
-          {/* Actions: Theme Toggle + WhatsApp Button */}
+          {/* Actions: Theme Toggle + WhatsApp Buttons */}
           <div className="navbar-actions">
             <ThemeToggle />
             <div className="navbar-divider" />
-            <a
-              href={defaultWaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-whatsapp btn-sm"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
-              </svg>
-              <span>Chat Admin</span>
-            </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <a
+                href={waLink1}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-sm"
+                title={`Chat WhatsApp Admin 1 (+${waNumber1})`}
+                onClick={(e) => handleWaClick(e)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                </svg>
+                <span>Admin 1</span>
+              </a>
+              <a
+                href={waLink2}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-sm"
+                title={`Chat WhatsApp Admin 2 (+${waNumber2})`}
+                style={{ background: '#059669' }}
+                onClick={(e) => handleWaClick(e)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                </svg>
+                <span>Admin 2</span>
+              </a>
+            </div>
 
             <button
               className="mobile-menu-btn"
@@ -358,11 +420,30 @@ export default function LandingPage({
             </p>
 
             <div className="hero-buttons">
-              <a href={defaultWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg">
+              <a
+                href={waLink1}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-lg"
+                title={`Chat WhatsApp Admin 1 (+${waNumber1})`}
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                 </svg>
-                <span>Konsultasi Gratis via WhatsApp</span>
+                <span>Chat Admin 1</span>
+              </a>
+              <a
+                href={waLink2}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-lg"
+                title={`Chat WhatsApp Admin 2 (+${waNumber2})`}
+                style={{ background: '#059669' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                </svg>
+                <span>Chat Admin 2</span>
               </a>
               <a href="#pricelist" className="btn btn-editorial-outline btn-lg">
                 <span>Cek Daftar Harga</span>
@@ -530,18 +611,34 @@ export default function LandingPage({
                         <td style={{ textAlign: 'right' }}>
                           <div className="table-price">{service.price}</div>
                           <span className="table-price-sub">Bisa nego</span>
-                          <a
-                            href={getWaLink(service.name)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-whatsapp btn-sm"
-                            style={{ marginTop: '8px', display: 'inline-flex' }}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
-                            </svg>
-                            <span>Tanya Admin</span>
-                          </a>
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <a
+                              href={buildWaUrl(waNumber1, `Halo Admin 1 Bryz Academic Support, saya ingin konsultasi pengerjaan *${service.name}*. Boleh info estimasi pengerjaan, syarat, dan harganya?`)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-whatsapp btn-sm"
+                              style={{ display: 'inline-flex', padding: '6px 10px', fontSize: '0.8rem' }}
+                              title={`Tanya Admin 1 (+${waNumber1})`}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                              </svg>
+                              <span>Admin 1</span>
+                            </a>
+                            <a
+                              href={buildWaUrl(waNumber2, `Halo Admin 2 Bryz Academic Support, saya ingin konsultasi pengerjaan *${service.name}*. Boleh info estimasi pengerjaan, syarat, dan harganya?`)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-whatsapp btn-sm"
+                              style={{ display: 'inline-flex', padding: '6px 10px', fontSize: '0.8rem', background: '#059669' }}
+                              title={`Tanya Admin 2 (+${waNumber2})`}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                              </svg>
+                              <span>Admin 2</span>
+                            </a>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -591,18 +688,31 @@ export default function LandingPage({
                     </div>
                   </div>
 
-                  {/* Action CTA Button */}
-                  <div style={{ marginTop: '12px' }}>
+                  {/* Action CTA Buttons */}
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                     <a
-                      href={getWaLink(service.name)}
+                      href={buildWaUrl(waNumber1, `Halo Admin 1 Bryz Academic Support, saya ingin konsultasi pengerjaan *${service.name}*. Boleh info estimasi pengerjaan, syarat, dan harganya?`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-whatsapp pm-card-btn"
+                      style={{ flex: 1, justifyContent: 'center' }}
                     >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                       </svg>
-                      <span>Tanya &amp; Pesan via WhatsApp</span>
+                      <span>Tanya Admin 1</span>
+                    </a>
+                    <a
+                      href={buildWaUrl(waNumber2, `Halo Admin 2 Bryz Academic Support, saya ingin konsultasi pengerjaan *${service.name}*. Boleh info estimasi pengerjaan, syarat, dan harganya?`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-whatsapp pm-card-btn"
+                      style={{ flex: 1, justifyContent: 'center', background: '#059669' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                      </svg>
+                      <span>Tanya Admin 2</span>
                     </a>
                   </div>
                 </div>
@@ -909,11 +1019,30 @@ export default function LandingPage({
               Konsultasikan tugas sekolah, tugas kuliah, makalah, karya ilmiah, atau skripsi Anda sekarang dengan admin. Kami siap respons cepat dan bantu cari solusi terbaik.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              <a href={defaultWaLink} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg">
+              <a
+                href={waLink1}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-lg"
+                title={`Tanya WhatsApp Admin 1 (+${waNumber1})`}
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
                 </svg>
-                <span>Tanya Admin Sekarang</span>
+                <span>Tanya Admin 1</span>
+              </a>
+              <a
+                href={waLink2}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-lg"
+                title={`Tanya WhatsApp Admin 2 (+${waNumber2})`}
+                style={{ background: '#059669' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
+                </svg>
+                <span>Tanya Admin 2</span>
               </a>
               <button
                 type="button"
@@ -1000,18 +1129,36 @@ export default function LandingPage({
               <ul className="footer-links">
                 <li>
                   <a
-                    href={defaultWaLink}
+                    href={buildWaUrl(config.whatsappNumber, 'Halo Admin 1 Bryz Academic Support, saya ingin konsultasi tugas akademik.')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="footer-link"
                     style={{ color: 'var(--success)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    onClick={(e) => handleWaClick(e)}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
                     </svg>
-                    <span>WhatsApp: +{config.whatsappNumber}</span>
+                    <span>{hasSecondWa ? `WA Admin 1: +${config.whatsappNumber}` : `WhatsApp: +${config.whatsappNumber}`}</span>
                   </a>
                 </li>
+                {hasSecondWa && (
+                  <li>
+                    <a
+                      href={buildWaUrl(config.whatsappNumber2!, 'Halo Admin 2 Bryz Academic Support, saya ingin konsultasi tugas akademik.')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer-link"
+                      style={{ color: 'var(--success)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      onClick={(e) => handleWaClick(e)}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                      </svg>
+                      <span>WA Admin 2: +{config.whatsappNumber2}</span>
+                    </a>
+                  </li>
+                )}
                 <li>
                   <button
                     type="button"
@@ -1197,23 +1344,38 @@ export default function LandingPage({
             </div>
 
             {/* Modal Actions */}
-            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <a
-                href={`https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent('Halo Admin Bryz Academic Support, saya ingin mengonfirmasi pembayaran tugas via QRIS. Berikut saya lampirkan bukti transfernya:')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-whatsapp btn-sm"
-                style={{ flex: 1, justifyContent: 'center' }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
-                </svg>
-                <span>Kirim Bukti Pembayaran</span>
-              </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <a
+                  href={buildWaUrl(waNumber1, 'Halo Admin 1 Bryz Academic Support, saya ingin mengonfirmasi pembayaran tugas via QRIS. Berikut saya lampirkan bukti transfernya:')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-whatsapp btn-sm"
+                  style={{ flex: 1, justifyContent: 'center' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                  </svg>
+                  <span>Kirim ke Admin 1</span>
+                </a>
+                <a
+                  href={buildWaUrl(waNumber2, 'Halo Admin 2 Bryz Academic Support, saya ingin mengonfirmasi pembayaran tugas via QRIS. Berikut saya lampirkan bukti transfernya:')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-whatsapp btn-sm"
+                  style={{ flex: 1, justifyContent: 'center', background: '#059669' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                  </svg>
+                  <span>Kirim ke Admin 2</span>
+                </a>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowQrisModal(false)}
                 className="btn btn-secondary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
               >
                 Tutup
               </button>
@@ -1365,41 +1527,159 @@ export default function LandingPage({
         </div>
       )}
 
-      {/* ===================== FLOATING ACTIONS (QRIS & WHATSAPP) ===================== */}
-      <div className="floating-actions-container">
-        <button
-          type="button"
-          onClick={() => setShowQrisModal(true)}
-          className="floating-qris"
-          title="Lihat Kode Barcode QRIS Pembayaran"
-          aria-label="Lihat Kode Barcode QRIS Pembayaran"
-        >
-          <span className="floating-qris-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
-              <path d="M7 7h.01M17 7h.01M7 17h.01" />
-            </svg>
-          </span>
-          <span className="floating-qris-label">Lihat Kode QRIS</span>
-        </button>
 
-        <a
-          href={defaultWaLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="floating-wa"
-          title="Konsultasi Cepat via WhatsApp"
+
+      {/* ===================== MODAL PEMILIHAN ADMIN WHATSAPP ===================== */}
+      {showWaSelector && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="wa-selector-title"
+          onClick={() => setShowWaSelector(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
         >
-          <span className="floating-wa-dot" />
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z"/>
-          </svg>
-          <span>Chat Admin WA</span>
-        </a>
-      </div>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '100%',
+              maxWidth: '420px',
+              boxShadow: 'var(--shadow-xl)',
+              position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    color: 'var(--success, #10b981)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 id="wa-selector-title" style={{ margin: 0, fontSize: '1.08rem', fontWeight: 700 }}>
+                    Hubungi Admin WhatsApp
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Pilih salah satu kontak di bawah ini
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowWaSelector(false)}
+                aria-label="Tutup pilihan WhatsApp"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.5 }}>
+              Kedua admin kami siap merespons konsultasi, pertanyaan pricelist, dan pemesanan tugas Anda.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Tombol Admin 1 */}
+              <button
+                type="button"
+                onClick={() => openWa(config.whatsappNumber)}
+                className="btn btn-whatsapp"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                  </svg>
+                  <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>Chat Admin 1</span>
+                </div>
+                <span style={{ fontSize: '0.78rem', opacity: 0.9, fontFamily: 'monospace' }}>
+                  +{config.whatsappNumber}
+                </span>
+              </button>
+
+              {/* Tombol Admin 2 */}
+              {config.whatsappNumber2 && (
+                <button
+                  type="button"
+                  onClick={() => openWa(config.whatsappNumber2!)}
+                  className="btn btn-whatsapp"
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.28-1.92 1.36-.5.08-1.14.12-3.32-.78-2.62-1.09-4.3-3.76-4.43-3.93-.13-.18-1.06-1.41-1.06-2.69s.67-1.91.91-2.17c.24-.26.52-.33.7-.33.17 0 .35 0 .5.01.16.01.38-.06.59.45.23.55.78 1.9.85 2.04.07.14.12.3.02.48-.09.19-.14.3-.28.47-.14.17-.3.37-.43.5-.14.14-.29.3-.13.58.17.28.74 1.22 1.58 1.97 1.09.97 2.01 1.27 2.29 1.41.28.14.45.12.62-.07.17-.2.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.54.33.07.12.07.71-.17 1.38z" />
+                    </svg>
+                    <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>Chat Admin 2</span>
+                  </div>
+                  <span style={{ fontSize: '0.78rem', opacity: 0.9, fontFamily: 'monospace' }}>
+                    +{config.whatsappNumber2}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            <div style={{ marginTop: '14px', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowWaSelector(false)}
+                className="btn btn-secondary btn-sm"
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
